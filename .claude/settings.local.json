@@ -1,11 +1,12 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(php artisan make:model:*)",
+      "Bash(gh issue create:*)"
+    ]
+  },
   "enabledMcpjsonServers": [
     "laravel-boost",
     "herd"
-  ],
-  "permissions": {
-    "allow": [
-      "Bash(php artisan make:model:*)"
-    ]
-  }
+  ]
 }

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Enums\ModelName;
 use App\Models\Chat;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
-use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Prism;
 use Throwable;
 
@@ -37,8 +37,10 @@ class GenerateChatTitle implements ShouldQueue
             ->join("\n");
 
         try {
+            $model = ModelName::from($this->chat->model);
+
             $response = Prism::text()
-                ->using(Provider::Ollama, 'llama3.2')
+                ->using($model->getProvider(), $model->value)
                 ->withSystemPrompt('Generate a short, descriptive title (3-6 words) for this conversation. Respond with ONLY the title, no quotes, no explanation.')
                 ->withPrompt("Conversation:\n{$conversationSummary}")
                 ->generate();
