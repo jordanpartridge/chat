@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArtifactController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatStreamController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('chats/{chat}', [ChatController::class, 'show'])->name('chats.show');
     Route::delete('chats/{chat}', [ChatController::class, 'destroy'])->name('chats.destroy');
     Route::post('chats/{chat}/stream', ChatStreamController::class)->name('chats.stream');
+
+    Route::get('chats/{chat}/artifacts', [ArtifactController::class, 'index'])->name('artifacts.index');
+    Route::get('artifacts/{artifact}', [ArtifactController::class, 'show'])->name('artifacts.show');
+    Route::get('artifacts/{artifact}/render', [ArtifactController::class, 'render'])->name('artifacts.render');
 });
 
 require __DIR__.'/settings.php';

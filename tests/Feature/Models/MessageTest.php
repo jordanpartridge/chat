@@ -71,3 +71,11 @@ it('has timestamps', function () {
     expect($message->created_at)->not->toBeNull();
     expect($message->updated_at)->not->toBeNull();
 });
+
+it('has many artifacts', function () {
+    $message = Message::factory()->create();
+    $artifacts = \App\Models\Artifact::factory()->count(3)->for($message)->create();
+
+    expect($message->artifacts)->toHaveCount(3);
+    expect($message->artifacts->first())->toBeInstanceOf(\App\Models\Artifact::class);
+});

@@ -17,7 +17,14 @@ class Chat extends Model
 
     use HasUuids;
 
-    protected $guarded = [];
+    /**
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'user_id',
+        'title',
+        'model',
+    ];
 
     /**
      * @return HasMany<Message, $this>

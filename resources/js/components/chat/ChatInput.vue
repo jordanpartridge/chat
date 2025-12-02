@@ -36,9 +36,11 @@ const handleKeydown = (e: KeyboardEvent) => {
         <form @submit.prevent="handleSubmit" class="flex gap-2">
             <Textarea
                 v-model="message"
+                name="message"
                 placeholder="Type your message..."
                 class="min-h-[60px] flex-1 resize-none"
                 :disabled="disabled || loading"
+                data-test="message-input"
                 @keydown="handleKeydown"
             />
             <Button
@@ -46,6 +48,7 @@ const handleKeydown = (e: KeyboardEvent) => {
                 size="icon"
                 class="h-[60px] w-[60px]"
                 :disabled="!message.trim() || disabled || loading"
+                data-test="send-message-button"
             >
                 <Loader2 v-if="loading" class="h-4 w-4 animate-spin" />
                 <Send v-else class="h-4 w-4" />

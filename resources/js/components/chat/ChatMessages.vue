@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
-import type { Message } from '@/types/chat';
+import type { Message, Artifact } from '@/types/chat';
 import ChatMessage from './ChatMessage.vue';
 
 const props = defineProps<{
     messages: Message[];
+}>();
+
+defineEmits<{
+    'select-artifact': [artifact: Artifact];
 }>();
 
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -37,6 +41,7 @@ watch(
                 v-for="(message, index) in messages"
                 :key="message.id ?? index"
                 :message="message"
+                @select-artifact="$emit('select-artifact', $event)"
             />
         </div>
     </div>

@@ -4,8 +4,9 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import ChatMessages from '@/components/chat/ChatMessages.vue';
 import ChatInput from '@/components/chat/ChatInput.vue';
+import ArtifactPanel from '@/components/artifacts/ArtifactPanel.vue';
 import { useMessageStream } from '@/composables/useMessageStream';
-import type { Chat, Message, Model } from '@/types/chat';
+import type { Chat, Message, Model, Artifact } from '@/types/chat';
 import { Role } from '@/types/chat';
 import type { BreadcrumbItem } from '@/types';
 import { index, show } from '@/actions/App/Http/Controllers/ChatController';
@@ -22,10 +23,21 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 ]);
 
 const messages = ref<Message[]>(props.chat.messages ?? []);
+const selectedArtifact = ref<Artifact | null>(null);
 
-const { send, isStreaming } = useMessageStream(props.chat.id, messages, () => {
-    router.reload({ only: ['chat'] });
-});
+const handleArtifactCreated = (artifact: Artifact) => {
+    // Automatically open the panel when an artifact is created
+    selectedArtifact.value = artifact;
+};
+
+const { send, isStreaming } = useMessageStream(
+    props.chat.id,
+    messages,
+    () => {
+        router.reload({ only: ['chat'] });
+    },
+    handleArtifactCreated
+);
 
 const handleSubmit = async (message: string) => {
     messages.value.push({
@@ -38,25 +50,44 @@ const handleSubmit = async (message: string) => {
         model: props.chat.model,
     });
 };
+
+const handleSelectArtifact = (artifact: Artifact) => {
+    selectedArtifact.value = artifact;
+};
+
+const handleClosePanel = () => {
+    selectedArtifact.value = null;
+};
 </script>
 
 <template>
     <Head :title="chat.title" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-col">
-            <div class="flex items-center justify-between border-b px-4 py-3">
-                <div>
-                    <h1 class="font-medium">{{ chat.title }}</h1>
-                    <p class="text-sm text-muted-foreground">{{ chat.model }}</p>
+        <div class="flex h-full">
+            <div class="flex flex-1 flex-col" :class="{ 'md:mr-0': !selectedArtifact }">
+                <div class="flex items-center justify-between border-b px-4 py-3">
+                    <div>
+                        <h1 class="font-medium">{{ chat.title }}</h1>
+                        <p class="text-sm text-muted-foreground">{{ chat.model }}</p>
+                    </div>
                 </div>
+
+                <ChatMessages
+                    :messages="messages"
+                    class="flex-1"
+                    @select-artifact="handleSelectArtifact"
+                />
+
+                <ChatInput
+                    :loading="isStreaming"
+                    @submit="handleSubmit"
+                />
             </div>
 
-            <ChatMessages :messages="messages" class="flex-1" />
-
-            <ChatInput
-                :loading="isStreaming"
-                @submit="handleSubmit"
+            <ArtifactPanel
+                :artifact="selectedArtifact"
+                @close="handleClosePanel"
             />
         </div>
     </AppLayout>
