@@ -98,7 +98,15 @@ export function useMessageStream(
         }
     };
 
-    const handleStreamError = (): void => {
+    const handleStreamError = (error: Error): void => {
+        // Check for CSRF token mismatch (419 error)
+        // Reload to get fresh token - this handles session expiry gracefully
+        if (error?.message?.includes('419') || error?.message?.includes('CSRF')) {
+            console.warn('CSRF token expired, reloading page to refresh...');
+            window.location.reload();
+            return;
+        }
+
         nextTick(() => {
             messages.value.push({
                 role: Role.ASSISTANT,
