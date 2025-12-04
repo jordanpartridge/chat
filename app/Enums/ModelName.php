@@ -36,11 +36,11 @@ enum ModelName: string
     }
 
     /**
-     * Get available models based on configuration.
-     * - Ollama models: only if installed locally
-     * - Groq models: only if API key is configured
+     * Determine which models are available at runtime based on installed providers and configuration.
      *
-     * @return array<array{id: string, name: string, description: string, provider: string, supportsTools: bool}>
+     * Ollama-backed models are included only when they are installed locally; Groq-backed models are included only when a Groq API key is configured.
+     *
+     * @return array<array{id: string, name: string, description: string, provider: string, supportsTools: bool}> Array of model descriptors with their metadata.
      */
     public static function getAvailableModels(?OllamaService $ollamaService = null): array
     {
@@ -70,6 +70,11 @@ enum ModelName: string
         return $available;
     }
 
+    /**
+     * Get the human-friendly display name for this model.
+     *
+     * @return string The display name for the model (for example, "Llama 3.2" or "Llama 3.3 70B (Groq)").
+     */
     public function getName(): string
     {
         return match ($this) {
@@ -85,6 +90,11 @@ enum ModelName: string
         };
     }
 
+    / **
+     * Provide a short human-readable description for the model.
+     *
+     * @return string A brief human-readable description of the enum model case.
+     */
     public function getDescription(): string
     {
         return match ($this) {
@@ -100,6 +110,13 @@ enum ModelName: string
         };
     }
 
+    /**
+     * Get the provider associated with this model.
+     *
+     * Maps each enum case to its corresponding Provider (e.g., Ollama or Groq).
+     *
+     * @return Provider The provider enum value for this model.
+     */
     public function getProvider(): Provider
     {
         return match ($this) {
@@ -111,8 +128,9 @@ enum ModelName: string
     }
 
     /**
-     * Check if this model supports tool calling reliably.
-     * Groq models handle tools well, Ollama models are unreliable.
+     * Determine whether the model reliably supports tool calling.
+     *
+     * @return bool `true` if the model reliably supports tool calling (Groq models), `false` otherwise.
      */
     public function supportsTools(): bool
     {
@@ -120,7 +138,9 @@ enum ModelName: string
     }
 
     /**
-     * @return array{id: string, name: string, description: string, provider: string, supportsTools: bool}
+     * Convert this model enum case to an associative representation.
+     *
+     * @return array{id: string, name: string, description: string, provider: string, supportsTools: bool} Associative array with keys: `id` — model identifier, `name` — human-friendly model name, `description` — model description, `provider` — provider identifier, `supportsTools` — `true` if the model reliably supports tool calls, `false` otherwise.
      */
     public function toArray(): array
     {

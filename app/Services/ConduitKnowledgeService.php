@@ -9,9 +9,14 @@ use Illuminate\Support\Facades\Process;
 class ConduitKnowledgeService
 {
     /**
-     * Search the Conduit knowledge base.
+     * Perform a search against the Conduit knowledge base by invoking the Conduit CLI and parsing its output.
      *
-     * @param  array<string>|null  $tags
+     * @param string $query The search query string.
+     * @param array<string>|null $tags Optional list of tags to filter results.
+     * @param string|null $collection Optional collection name to restrict the search.
+     * @param bool $semantic When true, perform a semantic search variant.
+     * @param int $limit Maximum number of results to return.
+     * @return ConduitKnowledgeResult The parsed search result containing success status, entries, and an error message when unsuccessful.
      */
     public function search(
         string $query,
@@ -42,8 +47,13 @@ class ConduitKnowledgeService
         return $this->parseSearchOutput($output);
     }
 
-    /**
-     * Check if Conduit CLI is available.
+    / **
+     * Determine whether the Conduit CLI is available on the system.
+     *
+     * Checks several common installation paths for an executable `conduit` binary;
+     * if none are found, falls back to running `which conduit` as a final check.
+     *
+     * @return bool `true` if an executable conduit binary is found, `false` otherwise.
      */
     public function isAvailable(): bool
     {
@@ -67,7 +77,12 @@ class ConduitKnowledgeService
     }
 
     /**
-     * Get the conduit binary path.
+     * Resolve the file system path to the Conduit CLI binary.
+     *
+     * Checks common installation locations and returns the first executable path found.
+     * If no explicit path is found, returns 'conduit' to rely on the system PATH.
+     *
+     * @return string The resolved conduit binary path (absolute executable path or 'conduit').
      */
     private function getConduitPath(): string
     {
@@ -118,10 +133,18 @@ class ConduitKnowledgeService
     }
 
     /**
-     * Build the search command with options.
-     *
-     * @param  array<string>|null  $tags
-     */
+         * Construct the shell command string for executing a Conduit knowledge search.
+         *
+         * Builds a single command string with arguments and options (with values escaped)
+         * appropriate for passing to a shell.
+         *
+         * @param string $query The search query.
+         * @param array<string>|null $tags Optional list of tags to filter results.
+         * @param string|null $collection Optional collection name to restrict the search.
+         * @param bool $semantic Whether to enable semantic search.
+         * @param int $limit Maximum number of results to return.
+         * @return string The assembled shell command string to execute the Conduit CLI search.
+         */
     private function buildSearchCommand(
         string $query,
         ?array $tags,

@@ -10,6 +10,11 @@ use Prism\Prism\Tool;
 
 class ConduitKnowledgeTool extends Tool
 {
+    /**
+     * Initialize the ConduitKnowledgeTool and configure it as the "search_knowledge" tool.
+     *
+     * @param ConduitKnowledgeService $knowledge Service used to perform knowledge searches.
+     */
     public function __construct(
         private ConduitKnowledgeService $knowledge,
     ) {
@@ -20,6 +25,12 @@ class ConduitKnowledgeTool extends Tool
             ->using($this->execute(...));
     }
 
+    /**
+     * Perform a knowledge search for the given query and return a user-facing result message.
+     *
+     * @param string $query The search query string to look up; must be at least 2 characters.
+     * @return string A user-facing message: an error if the Conduit CLI is unavailable or the query is too short or an exception occurs; "No knowledge entries found..." when no matches exist; or a success message "SEARCH COMPLETE - Found N results..." followed by the results' context string on success.
+     */
     public function execute(
         string $query,
     ): string {

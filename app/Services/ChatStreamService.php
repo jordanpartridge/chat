@@ -50,9 +50,16 @@ class ChatStreamService
     private array $artifactIds = [];
 
     /**
-     * Stream a chat response.
+     * Stream a chat response for the given chat and user message.
      *
-     * @return Generator<int, string, mixed, void>
+     * Streams Prism-generated events to the caller while incrementally persisting an assistant message.
+     * The stream yields JSON-encoded event strings (one per line) representing updates such as
+     * text deltas, artifact events, knowledge context, and error notifications.
+     *
+     * @param Chat $chat The chat instance to append the assistant message to and to read conversation history from.
+     * @param string $userMessage The user's message that drives the response and may trigger tools.
+     * @param ModelName $model The model to use for generation; controls provider and whether tools are enabled.
+     * @return Generator<int, string, mixed, void> Yields JSON-encoded event strings (each terminated with a newline). 
      */
     public function stream(Chat $chat, string $userMessage, ModelName $model): Generator
     {
@@ -102,7 +109,15 @@ class ChatStreamService
     }
 
     /**
-     * @return array<object>
+     * Build tool instances relevant to the current user message.
+     *
+     * Adds a CreateArtifactTool when artifact triggers are detected (and sets its message id),
+     * adds a GenerateLaravelModelTool when Laravel triggers are detected, and always includes
+     * a ConduitKnowledgeTool so the model can choose to invoke knowledge search.
+     *
+     * @param string $userMessage The raw user message used to detect trigger substrings.
+     * @param string $messageId   The assistant message ID to associate with any created artifact tool.
+     * @return array<object>      Array of instantiated tool objects ready for use by the streaming model.
      */
     private function buildTools(string $userMessage, string $messageId): array
     {
@@ -271,6 +286,15 @@ class ChatStreamService
         }
     }
 
+    /**
+     * Builds the assistant's system prompt, optionally including detailed tool usage guidance.
+     *
+     * When tools are enabled, the prompt includes rules for using available tools, knowledge-search guidance,
+     * and critical post-tool-use requirements. When disabled, the prompt is a short base instruction.
+     *
+     * @param bool $toolsEnabled Whether to include tool usage guidance in the prompt.
+     * @return string The final system prompt text.
+     */
     private function buildSystemPrompt(bool $toolsEnabled): string
     {
         $basePrompt = 'You are a helpful AI assistant. Answer questions directly and conversationally.';
