@@ -11,6 +11,7 @@ use App\Models\Artifact;
 use App\Models\Chat;
 use App\Models\Message;
 use App\Tools\CreateArtifactTool;
+use App\Tools\GenerateLaravelModelTool;
 use Generator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
@@ -53,6 +54,21 @@ class ChatStreamController extends Controller
         'vue',
     ];
 
+    /**
+     * Trigger words that indicate the user wants Laravel code generation.
+     *
+     * @var array<string>
+     */
+    private const LARAVEL_TRIGGERS = [
+        'model',
+        'migration',
+        'eloquent',
+        'factory',
+        'seeder',
+        'laravel',
+        'database table',
+    ];
+
     public function __invoke(ChatStreamRequest $request, Chat $chat): StreamedResponse
     {
         abort_unless($chat->user_id === $request->user()->id, 403);
@@ -66,9 +82,10 @@ class ChatStreamController extends Controller
         ]);
 
         $messages = $this->buildConversationHistory($chat);
-        $shouldEnableTools = $this->shouldEnableArtifactTools($userMessage);
+        $shouldEnableArtifactTools = $this->shouldEnableTriggerWords($userMessage, self::ARTIFACT_TRIGGERS);
+        $shouldEnableLaravelTools = $this->shouldEnableTriggerWords($userMessage, self::LARAVEL_TRIGGERS);
 
-        return Response::stream(function () use ($chat, $messages, $model, $shouldEnableTools): Generator {
+        return Response::stream(function () use ($chat, $messages, $model, $shouldEnableArtifactTools, $shouldEnableLaravelTools): Generator {
             $text = '';
             $assistantMessage = null;
             $artifactIds = [];
@@ -80,18 +97,28 @@ class ChatStreamController extends Controller
                     'parts' => ['text' => ''],
                 ]);
 
-                $prismBuilder = Prism::text()
-                    ->using($model->getProvider(), $model->value)
-                    ->withSystemPrompt($this->getSystemPrompt($shouldEnableTools))
-                    ->withMessages($messages);
+                $tools = [];
 
-                // Only enable tools when user explicitly requests visual content
+                // Only enable tools when user explicitly requests specific content
                 // Ollama models have poor tool-calling discipline and will call
                 // tools for everything if always enabled
-                if ($shouldEnableTools) {
+                if ($shouldEnableArtifactTools) {
                     $artifactTool = app(CreateArtifactTool::class);
                     $artifactTool->setMessageId($assistantMessage->id);
-                    $prismBuilder = $prismBuilder->withTools([$artifactTool])->withMaxSteps(3);
+                    $tools[] = $artifactTool;
+                }
+
+                if ($shouldEnableLaravelTools) {
+                    $tools[] = app(GenerateLaravelModelTool::class);
+                }
+
+                $prismBuilder = Prism::text()
+                    ->using($model->getProvider(), $model->value)
+                    ->withSystemPrompt($this->getSystemPrompt(count($tools) > 0))
+                    ->withMessages($messages);
+
+                if (count($tools) > 0) {
+                    $prismBuilder = $prismBuilder->withTools($tools)->withMaxSteps(3);
                 }
 
                 $response = $prismBuilder->asStream();
@@ -125,9 +152,21 @@ class ChatStreamController extends Controller
                         ])."\n";
                     }
 
-                    // Stream artifact events when tools create them
+                    // Stream tool results to the client
                     if ($event->type() === StreamEventType::ToolResult) {
                         $result = $event->toolResult->result;
+                        $toolName = $event->toolResult->toolName ?? '';
+
+                        // Stream Laravel model tool output directly as text
+                        if ($toolName === 'generate_laravel_model' && ! str_starts_with($result, 'Error:')) {
+                            yield json_encode([
+                                'type' => 'text',
+                                'content' => "\n\n".$result,
+                            ])."\n";
+                            $text .= "\n\n".$result;
+                        }
+
+                        // Stream artifact events when tools create them
                         if (preg_match('/\[artifact:([a-f0-9-]+)\]/', $result, $matches)) {
                             $artifact = Artifact::find($matches[1]);
                             if ($artifact !== null) {
@@ -204,13 +243,15 @@ class ChatStreamController extends Controller
     }
 
     /**
-     * Check if the user message contains trigger words for artifact creation.
+     * Check if the user message contains any of the given trigger words.
+     *
+     * @param  array<string>  $triggers
      */
-    private function shouldEnableArtifactTools(string $message): bool
+    private function shouldEnableTriggerWords(string $message, array $triggers): bool
     {
         $lowercaseMessage = strtolower($message);
 
-        foreach (self::ARTIFACT_TRIGGERS as $trigger) {
+        foreach ($triggers as $trigger) {
             if (str_contains($lowercaseMessage, $trigger)) {
                 return true;
             }
@@ -231,12 +272,12 @@ class ChatStreamController extends Controller
 
 
 IMPORTANT - TOOL USAGE RULES:
-- You have access to EXACTLY ONE tool: create_artifact
-- NO OTHER TOOLS EXIST. Do not attempt to call any other tool.
+- You may have access to specialized tools: create_artifact (for visual content) and/or generate_laravel_model (for Laravel code scaffolding).
+- ONLY use tools that are available. Do not invent tools or call tools that don't exist.
 - Do not invent tools. Do not call "eval", "calculate", "search", or anything else.
-- If create_artifact is not appropriate, just respond with text.
-- NEVER generate URLs or links. The UI will display the artifact automatically.
-- After creating an artifact, just say something like "I've created the artifact for you" - do not make up URLs.
+- If no tool is appropriate, just respond with text.
+- NEVER generate URLs or links. The UI will display results automatically.
+- After using a tool, briefly confirm what was created - do not make up URLs.
 PROMPT;
         }
 
