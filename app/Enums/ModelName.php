@@ -18,9 +18,9 @@ enum ModelName: string
     case QWEN25 = 'qwen2.5';
 
     // Groq models (cloud, fast inference)
-    case GROQ_LLAMA31_70B = 'llama-3.1-70b-versatile';
+    case GROQ_LLAMA33_70B = 'llama-3.3-70b-versatile';
     case GROQ_LLAMA31_8B = 'llama-3.1-8b-instant';
-    case GROQ_MIXTRAL = 'mixtral-8x7b-32768';
+    case GROQ_LLAMA4_SCOUT = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
     /**
      * Get all defined models (regardless of availability).
@@ -79,9 +79,9 @@ enum ModelName: string
             self::CODELLAMA => 'Code Llama',
             self::PHI3 => 'Phi-3',
             self::QWEN25 => 'Qwen 2.5',
-            self::GROQ_LLAMA31_70B => 'Llama 3.1 70B (Groq)',
+            self::GROQ_LLAMA33_70B => 'Llama 3.3 70B (Groq)',
             self::GROQ_LLAMA31_8B => 'Llama 3.1 8B (Groq)',
-            self::GROQ_MIXTRAL => 'Mixtral 8x7B (Groq)',
+            self::GROQ_LLAMA4_SCOUT => 'Llama 4 Scout (Groq)',
         };
     }
 
@@ -94,9 +94,9 @@ enum ModelName: string
             self::CODELLAMA => 'Specialized for code generation',
             self::PHI3 => 'Microsoft\'s compact but capable model',
             self::QWEN25 => 'Alibaba model, good tool calling support',
-            self::GROQ_LLAMA31_70B => 'Fast cloud inference, excellent tool support',
+            self::GROQ_LLAMA33_70B => 'Latest Llama 3.3, excellent reasoning',
             self::GROQ_LLAMA31_8B => 'Ultra-fast cloud inference, good for quick tasks',
-            self::GROQ_MIXTRAL => 'Fast Mixtral on Groq, great reasoning',
+            self::GROQ_LLAMA4_SCOUT => 'Meta\'s newest Llama 4, multimodal capable',
         };
     }
 
@@ -105,8 +105,8 @@ enum ModelName: string
         return match ($this) {
             self::LLAMA32, self::LLAMA31, self::MISTRAL,
             self::CODELLAMA, self::PHI3, self::QWEN25 => Provider::Ollama,
-            self::GROQ_LLAMA31_70B, self::GROQ_LLAMA31_8B,
-            self::GROQ_MIXTRAL => Provider::Groq,
+            self::GROQ_LLAMA33_70B, self::GROQ_LLAMA31_8B,
+            self::GROQ_LLAMA4_SCOUT => Provider::Groq,
         };
     }
 

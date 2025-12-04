@@ -40,15 +40,6 @@ class ChatStreamService
         'make model', 'migration', 'eloquent', 'factory', 'seeder', 'database table',
     ];
 
-    /**
-     * @var array<string>
-     */
-    private const KNOWLEDGE_TRIGGERS = [
-        'what do you know about', 'do you remember', 'knowledge',
-        'what did we discuss', 'previous conversation', 'look up',
-        'search for', 'find information', 'recall', 'context about',
-    ];
-
     private string $text = '';
 
     private ?Message $assistantMessage = null;
@@ -85,7 +76,7 @@ class ChatStreamService
                 ->withMessages($messages);
 
             if (count($tools) > 0) {
-                $prismBuilder = $prismBuilder->withTools($tools)->withMaxSteps(3);
+                $prismBuilder = $prismBuilder->withTools($tools)->withMaxSteps(2);
             }
 
             yield from $this->processStream($prismBuilder->asStream());
@@ -127,9 +118,8 @@ class ChatStreamService
             $tools[] = app(GenerateLaravelModelTool::class);
         }
 
-        if ($this->matchesTriggers($userMessage, self::KNOWLEDGE_TRIGGERS)) {
-            $tools[] = app(ConduitKnowledgeTool::class);
-        }
+        // Always include knowledge tool - let the model decide when to use it
+        $tools[] = app(ConduitKnowledgeTool::class);
 
         return $tools;
     }
@@ -293,15 +283,25 @@ class ChatStreamService
 
 
 IMPORTANT - TOOL USAGE RULES:
-- You may have access to specialized tools:
+- You have access to specialized tools:
   * create_artifact - for visual content (diagrams, components, etc.)
   * generate_laravel_model - for Laravel code scaffolding
-  * search_knowledge - for searching the Conduit knowledge base
+  * search_knowledge - searches a personal knowledge base with notes, insights, and project info
 - ONLY use tools that are available. Do not invent tools or call tools that don't exist.
-- Do not invent tools. Do not call "eval", "calculate", or anything else.
 - If no tool is appropriate, just respond with text.
 - NEVER generate URLs or links. The UI will display results automatically.
-- When using search_knowledge, incorporate the retrieved knowledge into your response naturally.
+
+KNOWLEDGE SEARCH GUIDANCE:
+- Use search_knowledge when the user asks about specific projects, frameworks, people, or topics that might be in their personal notes
+- Use it when you don't have specific information but the user seems to expect you to know something
+- Examples: "What is Conduit?", "Tell me about the SHIT framework", "What are the recommendations for X?"
+- Do NOT use it for general knowledge questions you can answer yourself
+
+CRITICAL - AFTER USING A TOOL:
+- After you receive tool results, you MUST respond with a text message to the user.
+- Do NOT call the same tool again after receiving results.
+- Do NOT chain multiple tool calls. One tool call per response is sufficient.
+- Summarize and present the tool results in your text response.
 PROMPT;
     }
 }

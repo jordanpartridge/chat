@@ -47,6 +47,20 @@ class ChatController extends Controller
         ]);
     }
 
+    public function update(Request $request, Chat $chat): RedirectResponse
+    {
+        abort_unless($chat->user_id === $request->user()->id, 403);
+
+        $validated = $request->validate([
+            'model' => ['sometimes', 'string'],
+            'title' => ['sometimes', 'string', 'max:255'],
+        ]);
+
+        $chat->update($validated);
+
+        return back();
+    }
+
     public function destroy(Request $request, Chat $chat): RedirectResponse
     {
         abort_unless($chat->user_id === $request->user()->id, 403);

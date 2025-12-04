@@ -68,13 +68,14 @@ it('enables laravel tools for trigger words', function () {
     expect($chunks)->not->toBeEmpty();
 });
 
-it('enables knowledge tools for trigger words', function () {
-    Prism::fake([createStreamTextResponse('Searching knowledge')]);
+it('always includes knowledge tool for Groq models', function () {
+    Prism::fake([createStreamTextResponse('Here is what I found')]);
 
+    // Knowledge tool is always available - no trigger words needed
     $chunks = iterator_to_array($this->service->stream(
         $this->chat,
-        'What do you know about authentication?',
-        ModelName::LLAMA32
+        'What is Conduit?',
+        ModelName::GROQ_LLAMA33_70B
     ));
 
     expect($chunks)->not->toBeEmpty();
@@ -183,7 +184,7 @@ it('enables tools for Groq models with trigger words', function () {
     $chunks = iterator_to_array($this->service->stream(
         $this->chat,
         'Create a diagram for me',
-        ModelName::GROQ_LLAMA31_70B // Groq model supports tools
+        ModelName::GROQ_LLAMA33_70B // Groq model supports tools
     ));
 
     expect($chunks)->not->toBeEmpty();

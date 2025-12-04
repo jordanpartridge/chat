@@ -16,9 +16,9 @@ describe('ModelName', function (): void {
             ->and(ModelName::PHI3->value)->toBe('phi3')
             ->and(ModelName::QWEN25->value)->toBe('qwen2.5')
             // Groq models
-            ->and(ModelName::GROQ_LLAMA31_70B->value)->toBe('llama-3.1-70b-versatile')
+            ->and(ModelName::GROQ_LLAMA33_70B->value)->toBe('llama-3.3-70b-versatile')
             ->and(ModelName::GROQ_LLAMA31_8B->value)->toBe('llama-3.1-8b-instant')
-            ->and(ModelName::GROQ_MIXTRAL->value)->toBe('mixtral-8x7b-32768');
+            ->and(ModelName::GROQ_LLAMA4_SCOUT->value)->toBe('meta-llama/llama-4-scout-17b-16e-instruct');
     });
 
     it('returns human-readable names', function (ModelName $model, string $expectedName): void {
@@ -30,9 +30,9 @@ describe('ModelName', function (): void {
         'codellama' => [ModelName::CODELLAMA, 'Code Llama'],
         'phi3' => [ModelName::PHI3, 'Phi-3'],
         'qwen25' => [ModelName::QWEN25, 'Qwen 2.5'],
-        'groq_llama31_70b' => [ModelName::GROQ_LLAMA31_70B, 'Llama 3.1 70B (Groq)'],
+        'groq_llama33_70b' => [ModelName::GROQ_LLAMA33_70B, 'Llama 3.3 70B (Groq)'],
         'groq_llama31_8b' => [ModelName::GROQ_LLAMA31_8B, 'Llama 3.1 8B (Groq)'],
-        'groq_mixtral' => [ModelName::GROQ_MIXTRAL, 'Mixtral 8x7B (Groq)'],
+        'groq_llama4_scout' => [ModelName::GROQ_LLAMA4_SCOUT, 'Llama 4 Scout (Groq)'],
     ]);
 
     it('returns descriptions', function (ModelName $model, string $expectedDescription): void {
@@ -44,9 +44,9 @@ describe('ModelName', function (): void {
         'codellama' => [ModelName::CODELLAMA, 'Specialized for code generation'],
         'phi3' => [ModelName::PHI3, "Microsoft's compact but capable model"],
         'qwen25' => [ModelName::QWEN25, 'Alibaba model, good tool calling support'],
-        'groq_llama31_70b' => [ModelName::GROQ_LLAMA31_70B, 'Fast cloud inference, excellent tool support'],
+        'groq_llama33_70b' => [ModelName::GROQ_LLAMA33_70B, 'Latest Llama 3.3, excellent reasoning'],
         'groq_llama31_8b' => [ModelName::GROQ_LLAMA31_8B, 'Ultra-fast cloud inference, good for quick tasks'],
-        'groq_mixtral' => [ModelName::GROQ_MIXTRAL, 'Fast Mixtral on Groq, great reasoning'],
+        'groq_llama4_scout' => [ModelName::GROQ_LLAMA4_SCOUT, "Meta's newest Llama 4, multimodal capable"],
     ]);
 
     it('returns Ollama provider for local models', function (ModelName $model): void {
@@ -63,9 +63,9 @@ describe('ModelName', function (): void {
     it('returns Groq provider for cloud models', function (ModelName $model): void {
         expect($model->getProvider())->toBe(Provider::Groq);
     })->with([
-        ModelName::GROQ_LLAMA31_70B,
+        ModelName::GROQ_LLAMA33_70B,
         ModelName::GROQ_LLAMA31_8B,
-        ModelName::GROQ_MIXTRAL,
+        ModelName::GROQ_LLAMA4_SCOUT,
     ]);
 
     it('supports tools only for Groq models', function (): void {
@@ -78,9 +78,9 @@ describe('ModelName', function (): void {
             ->and(ModelName::QWEN25->supportsTools())->toBeFalse();
 
         // Groq models support tools
-        expect(ModelName::GROQ_LLAMA31_70B->supportsTools())->toBeTrue()
+        expect(ModelName::GROQ_LLAMA33_70B->supportsTools())->toBeTrue()
             ->and(ModelName::GROQ_LLAMA31_8B->supportsTools())->toBeTrue()
-            ->and(ModelName::GROQ_MIXTRAL->supportsTools())->toBeTrue();
+            ->and(ModelName::GROQ_LLAMA4_SCOUT->supportsTools())->toBeTrue();
     });
 
     it('converts to array with correct structure', function (ModelName $model): void {
@@ -141,8 +141,8 @@ describe('ModelName', function (): void {
 
         $modelIds = array_column($models, 'id');
         expect($modelIds)->toContain('llama3.2')
-            ->and($modelIds)->toContain('llama-3.1-70b-versatile')
+            ->and($modelIds)->toContain('llama-3.3-70b-versatile')
             ->and($modelIds)->toContain('llama-3.1-8b-instant')
-            ->and($modelIds)->toContain('mixtral-8x7b-32768');
+            ->and($modelIds)->toContain('meta-llama/llama-4-scout-17b-16e-instruct');
     });
 });
