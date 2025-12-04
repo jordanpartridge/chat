@@ -10,6 +10,7 @@ use App\Jobs\GenerateChatTitle;
 use App\Models\Artifact;
 use App\Models\Chat;
 use App\Models\Message;
+use App\Tools\ConduitKnowledgeTool;
 use App\Tools\CreateArtifactTool;
 use App\Tools\GenerateLaravelModelTool;
 use Generator;
@@ -60,13 +61,34 @@ class ChatStreamController extends Controller
      * @var array<string>
      */
     private const LARAVEL_TRIGGERS = [
-        'model',
+        'laravel model',
+        'eloquent model',
+        'create model',
+        'generate model',
+        'make model',
         'migration',
         'eloquent',
         'factory',
         'seeder',
-        'laravel',
         'database table',
+    ];
+
+    /**
+     * Trigger words that indicate the user wants knowledge lookup.
+     *
+     * @var array<string>
+     */
+    private const KNOWLEDGE_TRIGGERS = [
+        'what do you know about',
+        'do you remember',
+        'knowledge',
+        'what did we discuss',
+        'previous conversation',
+        'look up',
+        'search for',
+        'find information',
+        'recall',
+        'context about',
     ];
 
     public function __invoke(ChatStreamRequest $request, Chat $chat): StreamedResponse
@@ -84,8 +106,9 @@ class ChatStreamController extends Controller
         $messages = $this->buildConversationHistory($chat);
         $shouldEnableArtifactTools = $this->shouldEnableTriggerWords($userMessage, self::ARTIFACT_TRIGGERS);
         $shouldEnableLaravelTools = $this->shouldEnableTriggerWords($userMessage, self::LARAVEL_TRIGGERS);
+        $shouldEnableKnowledgeTools = $this->shouldEnableTriggerWords($userMessage, self::KNOWLEDGE_TRIGGERS);
 
-        return Response::stream(function () use ($chat, $messages, $model, $shouldEnableArtifactTools, $shouldEnableLaravelTools): Generator {
+        return Response::stream(function () use ($chat, $messages, $model, $shouldEnableArtifactTools, $shouldEnableLaravelTools, $shouldEnableKnowledgeTools): Generator {
             $text = '';
             $assistantMessage = null;
             $artifactIds = [];
@@ -110,6 +133,10 @@ class ChatStreamController extends Controller
 
                 if ($shouldEnableLaravelTools) {
                     $tools[] = app(GenerateLaravelModelTool::class);
+                }
+
+                if ($shouldEnableKnowledgeTools) {
+                    $tools[] = app(ConduitKnowledgeTool::class);
                 }
 
                 $prismBuilder = Prism::text()
@@ -164,6 +191,19 @@ class ChatStreamController extends Controller
                                 'content' => "\n\n".$result,
                             ])."\n";
                             $text .= "\n\n".$result;
+                        }
+
+                        // Stream knowledge search results
+                        if ($toolName === 'search_knowledge' && preg_match('/\[knowledge:(\d+) results\]/', $result, $kMatches)) {
+                            $contextStart = strpos($result, "\n\n");
+                            if ($contextStart !== false) {
+                                $knowledgeContent = substr($result, $contextStart);
+                                yield json_encode([
+                                    'type' => 'text',
+                                    'content' => "\n\n**Knowledge Base Results:**".$knowledgeContent,
+                                ])."\n";
+                                $text .= "\n\n**Knowledge Base Results:**".$knowledgeContent;
+                            }
                         }
 
                         // Stream artifact events when tools create them
@@ -272,12 +312,15 @@ class ChatStreamController extends Controller
 
 
 IMPORTANT - TOOL USAGE RULES:
-- You may have access to specialized tools: create_artifact (for visual content) and/or generate_laravel_model (for Laravel code scaffolding).
+- You may have access to specialized tools:
+  * create_artifact - for visual content (diagrams, components, etc.)
+  * generate_laravel_model - for Laravel code scaffolding
+  * search_knowledge - for searching the Conduit knowledge base
 - ONLY use tools that are available. Do not invent tools or call tools that don't exist.
-- Do not invent tools. Do not call "eval", "calculate", "search", or anything else.
+- Do not invent tools. Do not call "eval", "calculate", or anything else.
 - If no tool is appropriate, just respond with text.
 - NEVER generate URLs or links. The UI will display results automatically.
-- After using a tool, briefly confirm what was created - do not make up URLs.
+- When using search_knowledge, incorporate the retrieved knowledge into your response naturally.
 PROMPT;
         }
 
