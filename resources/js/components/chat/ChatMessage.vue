@@ -2,11 +2,16 @@
 import { computed } from 'vue';
 import { User, Bot } from 'lucide-vue-next';
 import { marked } from 'marked';
-import type { Message } from '@/types/chat';
+import type { Message, Artifact } from '@/types/chat';
 import { Role } from '@/types/chat';
+import ArtifactCard from '@/components/artifacts/ArtifactCard.vue';
 
 const props = defineProps<{
     message: Message;
+}>();
+
+defineEmits<{
+    'select-artifact': [artifact: Artifact];
 }>();
 
 const isUser = computed(() => props.message.role === Role.USER);
@@ -25,6 +30,10 @@ const renderedContent = computed(() => {
     }
     // For assistant messages, render markdown
     return marked.parse(text);
+});
+
+const hasArtifacts = computed(() => {
+    return props.message.artifacts && props.message.artifacts.length > 0;
 });
 </script>
 
@@ -45,6 +54,14 @@ const renderedContent = computed(() => {
             <div class="prose prose-sm dark:prose-invert max-w-none">
                 <p v-if="isUser" class="whitespace-pre-wrap">{{ message.parts?.text }}</p>
                 <div v-else v-html="renderedContent" />
+            </div>
+            <div v-if="hasArtifacts" class="mt-4 flex flex-col gap-2">
+                <ArtifactCard
+                    v-for="artifact in message.artifacts"
+                    :key="artifact.id"
+                    :artifact="artifact"
+                    @select="$emit('select-artifact', $event)"
+                />
             </div>
         </div>
     </div>

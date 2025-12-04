@@ -17,11 +17,35 @@ export interface MessageParts {
     text?: string;
 }
 
+export enum ArtifactType {
+    CODE = 'code',
+    MARKDOWN = 'markdown',
+    HTML = 'html',
+    SVG = 'svg',
+    MERMAID = 'mermaid',
+    REACT = 'react',
+    VUE = 'vue',
+}
+
+export interface Artifact {
+    id: string;
+    message_id: string;
+    identifier: string;
+    type: ArtifactType;
+    title: string;
+    language?: string;
+    content: string;
+    version: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Message {
     id?: string;
     chat_id?: string;
     role: Role;
     parts: MessageParts;
+    artifacts?: Artifact[];
     created_at?: string;
     updated_at?: string;
 }

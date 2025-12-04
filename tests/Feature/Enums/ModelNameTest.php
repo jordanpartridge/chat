@@ -7,12 +7,13 @@ use Prism\Prism\Enums\Provider;
 
 describe('ModelName', function (): void {
     it('has expected cases', function (): void {
-        expect(ModelName::cases())->toHaveCount(5)
+        expect(ModelName::cases())->toHaveCount(6)
             ->and(ModelName::LLAMA32->value)->toBe('llama3.2')
             ->and(ModelName::LLAMA31->value)->toBe('llama3.1')
             ->and(ModelName::MISTRAL->value)->toBe('mistral')
             ->and(ModelName::CODELLAMA->value)->toBe('codellama')
-            ->and(ModelName::PHI3->value)->toBe('phi3');
+            ->and(ModelName::PHI3->value)->toBe('phi3')
+            ->and(ModelName::QWEN25->value)->toBe('qwen2.5');
     });
 
     it('returns human-readable names', function (ModelName $model, string $expectedName): void {
@@ -23,6 +24,7 @@ describe('ModelName', function (): void {
         'mistral' => [ModelName::MISTRAL, 'Mistral'],
         'codellama' => [ModelName::CODELLAMA, 'Code Llama'],
         'phi3' => [ModelName::PHI3, 'Phi-3'],
+        'qwen25' => [ModelName::QWEN25, 'Qwen 2.5'],
     ]);
 
     it('returns descriptions', function (ModelName $model, string $expectedDescription): void {
@@ -33,6 +35,7 @@ describe('ModelName', function (): void {
         'mistral' => [ModelName::MISTRAL, 'Fast and efficient for most tasks'],
         'codellama' => [ModelName::CODELLAMA, 'Specialized for code generation'],
         'phi3' => [ModelName::PHI3, "Microsoft's compact but capable model"],
+        'qwen25' => [ModelName::QWEN25, 'Alibaba model, good tool calling support'],
     ]);
 
     it('returns Ollama as provider for all models', function (ModelName $model): void {
@@ -56,7 +59,7 @@ describe('ModelName', function (): void {
 
         expect($models)
             ->toBeArray()
-            ->toHaveCount(5)
+            ->toHaveCount(6)
             ->each->toHaveKeys(['id', 'name', 'description', 'provider']);
     });
 

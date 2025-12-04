@@ -14,6 +14,7 @@ enum ModelName: string
     case MISTRAL = 'mistral';
     case CODELLAMA = 'codellama';
     case PHI3 = 'phi3';
+    case QWEN25 = 'qwen2.5';
 
     /**
      * Get all defined models (regardless of availability).
@@ -52,6 +53,7 @@ enum ModelName: string
             self::MISTRAL => 'Mistral',
             self::CODELLAMA => 'Code Llama',
             self::PHI3 => 'Phi-3',
+            self::QWEN25 => 'Qwen 2.5',
         };
     }
 
@@ -63,6 +65,7 @@ enum ModelName: string
             self::MISTRAL => 'Fast and efficient for most tasks',
             self::CODELLAMA => 'Specialized for code generation',
             self::PHI3 => 'Microsoft\'s compact but capable model',
+            self::QWEN25 => 'Alibaba model, good tool calling support',
         };
     }
 
