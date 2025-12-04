@@ -19,6 +19,12 @@ class SvgSanitizer
         'embed',
         'link',
         'style',
+        'use',
+        'image',
+        'animate',
+        'set',
+        'animateMotion',
+        'animateTransform',
     ];
 
     /**
@@ -74,10 +80,17 @@ class SvgSanitizer
             ) ?? $svg;
         }
 
-        // Remove event handler attributes
+        // Remove event handler attributes (both quoted and unquoted values)
         foreach (self::DANGEROUS_ATTRIBUTES as $attr) {
+            // Match quoted values: onload="..." or onload='...'
             $svg = preg_replace(
                 '/\s'.$attr.'\s*=\s*["\'][^"\']*["\']/is',
+                '',
+                $svg
+            ) ?? $svg;
+            // Match unquoted values: onload=alert(1)
+            $svg = preg_replace(
+                '/\s'.$attr.'\s*=\s*[^\s>"\']+/is',
                 '',
                 $svg
             ) ?? $svg;

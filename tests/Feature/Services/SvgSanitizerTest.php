@@ -132,3 +132,25 @@ it('handles multiple dangerous elements', function () {
         ->and($result)->not->toContain('<iframe')
         ->and($result)->not->toContain('javascript:');
 });
+
+it('removes unquoted event handler attributes', function () {
+    $sanitizer = new SvgSanitizer;
+
+    $svg = '<svg><circle onload=alert(1) cx="50"/></svg>';
+    $result = $sanitizer->sanitize($svg);
+
+    expect($result)->not->toContain('onload')
+        ->and($result)->not->toContain('alert')
+        ->and($result)->toContain('cx="50"');
+});
+
+it('removes animate and use tags', function () {
+    $sanitizer = new SvgSanitizer;
+
+    $svg = '<svg><use href="#evil"/><animate attributeName="x"/><circle/></svg>';
+    $result = $sanitizer->sanitize($svg);
+
+    expect($result)->not->toContain('<use')
+        ->and($result)->not->toContain('<animate')
+        ->and($result)->toContain('<circle');
+});
