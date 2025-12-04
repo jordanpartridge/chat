@@ -160,3 +160,31 @@ it('builds conversation history from existing messages', function () {
     // Should have 3 messages now (2 existing + 1 new assistant)
     expect($this->chat->messages()->count())->toBe(3);
 });
+
+it('does not enable tools for Ollama models', function () {
+    Prism::fake([createStreamTextResponse('I cannot create diagrams')]);
+
+    // Even with trigger words, Ollama models should not get tools
+    $chunks = iterator_to_array($this->service->stream(
+        $this->chat,
+        'Create a diagram for me',
+        ModelName::LLAMA32 // Ollama model
+    ));
+
+    expect($chunks)->not->toBeEmpty();
+    // Response should be text-only since tools are disabled
+    $content = implode('', $chunks);
+    expect($content)->toContain('text');
+});
+
+it('enables tools for Groq models with trigger words', function () {
+    Prism::fake([createStreamTextResponse('Creating diagram')]);
+
+    $chunks = iterator_to_array($this->service->stream(
+        $this->chat,
+        'Create a diagram for me',
+        ModelName::GROQ_LLAMA31_70B // Groq model supports tools
+    ));
+
+    expect($chunks)->not->toBeEmpty();
+});

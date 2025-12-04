@@ -73,7 +73,10 @@ class ChatStreamService
                 'parts' => ['text' => ''],
             ]);
 
-            $tools = $this->buildTools($userMessage, $this->assistantMessage->id);
+            // Only enable tools for models that support them (Groq models)
+            $tools = $model->supportsTools()
+                ? $this->buildTools($userMessage, $this->assistantMessage->id)
+                : [];
             $messages = $this->buildConversationHistory($chat);
 
             $prismBuilder = Prism::text()
