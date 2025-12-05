@@ -49,7 +49,8 @@ it('searches knowledge base successfully', function () {
 
     $result = $tool->execute(query: 'laravel auth');
 
-    expect($result)->toContain('[knowledge:1 results]')
+    expect($result)->toContain('SEARCH COMPLETE')
+        ->and($result)->toContain('Found 1 results')
         ->and($result)->toContain('Laravel Auth Guide');
 });
 
@@ -86,62 +87,30 @@ it('returns error message when search fails', function () {
     expect($result)->toBe('Knowledge search failed: Connection refused');
 });
 
-it('passes tags to search service', function () {
+it('uses default parameters for search', function () {
     $service = $this->mock(ConduitKnowledgeService::class);
     $service->shouldReceive('isAvailable')->andReturn(true);
     $service->shouldReceive('search')
         ->once()
-        ->with('test', ['laravel', 'api'], null, false, 5)
+        ->with('test query', null, null, false, 5)
         ->andReturn(new ConduitKnowledgeResult(success: true, entries: []));
 
     $tool = new ConduitKnowledgeTool($service);
 
-    $result = $tool->execute(query: 'test', tags: 'laravel, api');
+    $result = $tool->execute(query: 'test query');
 
     expect($result)->toContain('No knowledge entries found');
 });
 
-it('passes collection to search service', function () {
+it('handles exceptions gracefully', function () {
     $service = $this->mock(ConduitKnowledgeService::class);
     $service->shouldReceive('isAvailable')->andReturn(true);
     $service->shouldReceive('search')
-        ->once()
-        ->with('test', null, 'docs', false, 5)
-        ->andReturn(new ConduitKnowledgeResult(success: true, entries: []));
+        ->andThrow(new RuntimeException('Connection timeout'));
 
     $tool = new ConduitKnowledgeTool($service);
 
-    $result = $tool->execute(query: 'test', collection: 'docs');
+    $result = $tool->execute(query: 'test query');
 
-    expect($result)->toContain('No knowledge entries found');
-});
-
-it('enables semantic search when specified', function () {
-    $service = $this->mock(ConduitKnowledgeService::class);
-    $service->shouldReceive('isAvailable')->andReturn(true);
-    $service->shouldReceive('search')
-        ->once()
-        ->with('test', null, null, true, 5)
-        ->andReturn(new ConduitKnowledgeResult(success: true, entries: []));
-
-    $tool = new ConduitKnowledgeTool($service);
-
-    $result = $tool->execute(query: 'test', searchType: 'semantic');
-
-    expect($result)->toContain('No knowledge entries found');
-});
-
-it('handles empty tags string', function () {
-    $service = $this->mock(ConduitKnowledgeService::class);
-    $service->shouldReceive('isAvailable')->andReturn(true);
-    $service->shouldReceive('search')
-        ->once()
-        ->with('test', null, null, false, 5)
-        ->andReturn(new ConduitKnowledgeResult(success: true, entries: []));
-
-    $tool = new ConduitKnowledgeTool($service);
-
-    $result = $tool->execute(query: 'test', tags: '');
-
-    expect($result)->toContain('No knowledge entries found');
+    expect($result)->toBe('Error searching knowledge base: Connection timeout');
 });

@@ -56,25 +56,26 @@ it('enables artifact tools for trigger words', function () {
     expect($chunks)->not->toBeEmpty();
 });
 
-it('enables laravel tools for trigger words', function () {
+it('enables laravel tools for trigger words with Groq model', function () {
     Prism::fake([createStreamTextResponse('Creating model')]);
 
     $chunks = iterator_to_array($this->service->stream(
         $this->chat,
         'Generate a laravel model for users',
-        ModelName::LLAMA32
+        ModelName::GROQ_LLAMA33_70B
     ));
 
     expect($chunks)->not->toBeEmpty();
 });
 
-it('enables knowledge tools for trigger words', function () {
-    Prism::fake([createStreamTextResponse('Searching knowledge')]);
+it('always includes knowledge tool for Groq models', function () {
+    Prism::fake([createStreamTextResponse('Here is what I found')]);
 
+    // Knowledge tool is always available - no trigger words needed
     $chunks = iterator_to_array($this->service->stream(
         $this->chat,
-        'What do you know about authentication?',
-        ModelName::LLAMA32
+        'What is Conduit?',
+        ModelName::GROQ_LLAMA33_70B
     ));
 
     expect($chunks)->not->toBeEmpty();
@@ -159,4 +160,61 @@ it('builds conversation history from existing messages', function () {
 
     // Should have 3 messages now (2 existing + 1 new assistant)
     expect($this->chat->messages()->count())->toBe(3);
+});
+
+it('does not enable tools for Ollama models', function () {
+    Prism::fake([createStreamTextResponse('I cannot create diagrams')]);
+
+    // Even with trigger words, Ollama models should not get tools
+    $chunks = iterator_to_array($this->service->stream(
+        $this->chat,
+        'Create a diagram for me',
+        ModelName::LLAMA32 // Ollama model
+    ));
+
+    expect($chunks)->not->toBeEmpty();
+    // Response should be text-only since tools are disabled
+    $content = implode('', $chunks);
+    expect($content)->toContain('text');
+});
+
+it('enables tools for Groq models with trigger words', function () {
+    Prism::fake([createStreamTextResponse('Creating diagram')]);
+
+    $chunks = iterator_to_array($this->service->stream(
+        $this->chat,
+        'Create a diagram for me',
+        ModelName::GROQ_LLAMA33_70B // Groq model supports tools
+    ));
+
+    expect($chunks)->not->toBeEmpty();
+});
+
+it('includes web search tool when available for Groq models', function () {
+    // Configure Tavily API key to enable web search
+    config(['services.tavily.api_key' => 'test-key']);
+
+    Prism::fake([createStreamTextResponse('Search results')]);
+
+    $chunks = iterator_to_array($this->service->stream(
+        $this->chat,
+        'What is the latest news?',
+        ModelName::GROQ_LLAMA33_70B
+    ));
+
+    expect($chunks)->not->toBeEmpty();
+});
+
+it('does not include web search tool when not configured', function () {
+    config(['services.tavily.api_key' => '']);
+
+    Prism::fake([createStreamTextResponse('No web search')]);
+
+    $chunks = iterator_to_array($this->service->stream(
+        $this->chat,
+        'What is the latest news?',
+        ModelName::GROQ_LLAMA33_70B
+    ));
+
+    expect($chunks)->not->toBeEmpty();
 });

@@ -12,6 +12,7 @@ use App\Models\Message;
 use App\Tools\ConduitKnowledgeTool;
 use App\Tools\CreateArtifactTool;
 use App\Tools\GenerateLaravelModelTool;
+use App\Tools\WebSearchTool;
 use Generator;
 use Illuminate\Support\Facades\Log;
 use Prism\Prism\Enums\StreamEventType;
@@ -40,15 +41,6 @@ class ChatStreamService
         'make model', 'migration', 'eloquent', 'factory', 'seeder', 'database table',
     ];
 
-    /**
-     * @var array<string>
-     */
-    private const KNOWLEDGE_TRIGGERS = [
-        'what do you know about', 'do you remember', 'knowledge',
-        'what did we discuss', 'previous conversation', 'look up',
-        'search for', 'find information', 'recall', 'context about',
-    ];
-
     private string $text = '';
 
     private ?Message $assistantMessage = null;
@@ -73,7 +65,10 @@ class ChatStreamService
                 'parts' => ['text' => ''],
             ]);
 
-            $tools = $this->buildTools($userMessage, $this->assistantMessage->id);
+            // Only enable tools for models that support them (Groq models)
+            $tools = $model->supportsTools()
+                ? $this->buildTools($userMessage, $this->assistantMessage->id)
+                : [];
             $messages = $this->buildConversationHistory($chat);
 
             $prismBuilder = Prism::text()
@@ -82,7 +77,7 @@ class ChatStreamService
                 ->withMessages($messages);
 
             if (count($tools) > 0) {
-                $prismBuilder = $prismBuilder->withTools($tools)->withMaxSteps(3);
+                $prismBuilder = $prismBuilder->withTools($tools)->withMaxSteps(2);
             }
 
             yield from $this->processStream($prismBuilder->asStream());
@@ -124,8 +119,13 @@ class ChatStreamService
             $tools[] = app(GenerateLaravelModelTool::class);
         }
 
-        if ($this->matchesTriggers($userMessage, self::KNOWLEDGE_TRIGGERS)) {
-            $tools[] = app(ConduitKnowledgeTool::class);
+        // Always include knowledge tool - let the model decide when to use it
+        $tools[] = app(ConduitKnowledgeTool::class);
+
+        // Include web search as fallback for external information
+        $webSearchTool = app(WebSearchTool::class);
+        if ($webSearchTool->isAvailable()) {
+            $tools[] = $webSearchTool;
         }
 
         return $tools;
@@ -290,15 +290,27 @@ class ChatStreamService
 
 
 IMPORTANT - TOOL USAGE RULES:
-- You may have access to specialized tools:
+- You have access to specialized tools:
   * create_artifact - for visual content (diagrams, components, etc.)
   * generate_laravel_model - for Laravel code scaffolding
-  * search_knowledge - for searching the Conduit knowledge base
+  * search_knowledge - searches a personal knowledge base with notes, insights, and project info
+  * search_web - searches the internet for current/external information (if available)
 - ONLY use tools that are available. Do not invent tools or call tools that don't exist.
-- Do not invent tools. Do not call "eval", "calculate", or anything else.
 - If no tool is appropriate, just respond with text.
 - NEVER generate URLs or links. The UI will display results automatically.
-- When using search_knowledge, incorporate the retrieved knowledge into your response naturally.
+
+SEARCH STRATEGY:
+1. First try search_knowledge for personal projects, frameworks, insights, or topics that might be in notes
+2. If search_knowledge returns no results AND the question is about external/public information, try search_web
+3. Do NOT use search_web for questions you can answer from your own knowledge
+4. Examples for search_knowledge: "What is Conduit?", "Tell me about the SHIT framework", "What are my notes on X?"
+5. Examples for search_web: "Latest news about Laravel", "What is company X?", "Current info about person Y"
+
+CRITICAL - AFTER USING A TOOL:
+- After you receive tool results, you MUST respond with a text message to the user.
+- Do NOT call the same tool again after receiving results.
+- Do NOT chain multiple tool calls. One tool call per response is sufficient.
+- Summarize and present the tool results in your text response.
 PROMPT;
     }
 }

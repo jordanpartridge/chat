@@ -22,7 +22,12 @@ class ConduitKnowledgeService
     ): ConduitKnowledgeResult {
         $command = $this->buildSearchCommand($query, $tags, $collection, $semantic, $limit);
 
-        $result = Process::timeout(30)->run($command);
+        // Set PATH to include Herd's PHP binary location
+        $env = [
+            'PATH' => '/Users/jordanpartridge/Library/Application Support/Herd/bin:/usr/local/bin:/usr/bin:/bin',
+        ];
+
+        $result = Process::timeout(30)->env($env)->run($command);
 
         if (! $result->successful()) {
             return new ConduitKnowledgeResult(
@@ -42,9 +47,43 @@ class ConduitKnowledgeService
      */
     public function isAvailable(): bool
     {
+        // Check common locations for conduit binary
+        $possiblePaths = [
+            '/Users/jordanpartridge/.composer/vendor/bin/conduit',
+            '/usr/local/bin/conduit',
+            getenv('HOME').'/.composer/vendor/bin/conduit',
+        ];
+
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path) && is_executable($path)) {
+                return true;
+            }
+        }
+
+        // Fallback to which command
         $result = Process::timeout(5)->run('which conduit');
 
         return $result->successful() && ! empty(trim($result->output()));
+    }
+
+    /**
+     * Get the conduit binary path.
+     */
+    private function getConduitPath(): string
+    {
+        $possiblePaths = [
+            '/Users/jordanpartridge/.composer/vendor/bin/conduit',
+            '/usr/local/bin/conduit',
+            getenv('HOME').'/.composer/vendor/bin/conduit',
+        ];
+
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path) && is_executable($path)) {
+                return $path;
+            }
+        }
+
+        return 'conduit'; // fallback to PATH
     }
 
     /**
@@ -90,7 +129,7 @@ class ConduitKnowledgeService
         bool $semantic,
         int $limit
     ): string {
-        $parts = ['conduit', 'knowledge:search'];
+        $parts = [$this->getConduitPath(), 'knowledge:search'];
 
         $parts[] = escapeshellarg($query);
         $parts[] = '--limit='.escapeshellarg((string) $limit);

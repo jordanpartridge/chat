@@ -320,3 +320,33 @@ it('generates hasOne relationship', function () {
     expect($result)->toContain('public function profile()')
         ->and($result)->toContain('$this->hasOne(Profile::class)');
 });
+
+it('generates bigInteger field type', function () {
+    Artisan::shouldReceive('call')->once();
+
+    $tool = new GenerateLaravelModelTool;
+
+    $result = $tool->execute(
+        name: 'Transaction',
+        fields: 'amount:bigint',
+        with: 'none'
+    );
+
+    expect($result)->toContain("\$table->bigInteger('amount');");
+});
+
+it('handles model with no fillable fields', function () {
+    Artisan::shouldReceive('call')->once();
+
+    $tool = new GenerateLaravelModelTool;
+
+    // This tests the formatArrayItems with empty array
+    $result = $tool->execute(
+        name: 'EmptyModel',
+        fields: 'id:integer',
+        with: 'none'
+    );
+
+    expect($result)->toContain('Created model')
+        ->and($result)->toContain('protected $fillable');
+});

@@ -2,7 +2,7 @@ import type { Ref } from 'vue';
 import type { Message, StreamEvent, Artifact } from '@/types/chat';
 import { useStream } from '@laravel/stream-vue';
 import { nextTick } from 'vue';
-import { Role, StreamEventType } from '@/types/chat';
+import { Role } from '@/types/chat';
 import ChatStreamController from '@/actions/App/Http/Controllers/ChatStreamController';
 
 interface StreamParams {

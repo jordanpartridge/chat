@@ -153,3 +153,50 @@ it('forbids deleting another user\'s chat', function () {
     $response->assertForbidden();
     $this->assertDatabaseHas('chats', ['id' => $chat->id]);
 });
+
+it('updates the chat model', function () {
+    $user = User::factory()->create();
+    $chat = Chat::factory()->for($user)->create(['model' => ModelName::LLAMA32->value]);
+
+    $response = $this->actingAs($user)->patch(route('chats.update', $chat), [
+        'model' => ModelName::GROQ_LLAMA33_70B->value,
+    ]);
+
+    $response->assertRedirect();
+    expect($chat->fresh()->model)->toBe(ModelName::GROQ_LLAMA33_70B->value);
+});
+
+it('updates the chat title', function () {
+    $user = User::factory()->create();
+    $chat = Chat::factory()->for($user)->create(['title' => 'Original Title']);
+
+    $response = $this->actingAs($user)->patch(route('chats.update', $chat), [
+        'title' => 'New Title',
+    ]);
+
+    $response->assertRedirect();
+    expect($chat->fresh()->title)->toBe('New Title');
+});
+
+it('forbids updating another user\'s chat', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $chat = Chat::factory()->for($otherUser)->create();
+
+    $response = $this->actingAs($user)->patch(route('chats.update', $chat), [
+        'title' => 'Hacked Title',
+    ]);
+
+    $response->assertForbidden();
+});
+
+it('validates title max length on update', function () {
+    $user = User::factory()->create();
+    $chat = Chat::factory()->for($user)->create();
+
+    $response = $this->actingAs($user)->patch(route('chats.update', $chat), [
+        'title' => str_repeat('a', 300),
+    ]);
+
+    $response->assertSessionHasErrors('title');
+});

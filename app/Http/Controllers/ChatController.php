@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ModelName;
 use App\Http\Requests\StoreChatRequest;
+use App\Http\Requests\UpdateChatRequest;
 use App\Models\Chat;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,6 +46,13 @@ class ChatController extends Controller
             'chats' => $chats,
             'models' => ModelName::getAvailableModels(),
         ]);
+    }
+
+    public function update(UpdateChatRequest $request, Chat $chat): RedirectResponse
+    {
+        $chat->update($request->validated());
+
+        return back();
     }
 
     public function destroy(Request $request, Chat $chat): RedirectResponse

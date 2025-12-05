@@ -18,5 +18,12 @@ class Agent extends Model
     protected $fillable = [
         'name',
         'description',
+        'user_id',
+        'default_model_id',
+        'system_prompt',
+        'avatar',
+        'tools',
+        'capabilities',
+        'is_active',
     ];
 }
