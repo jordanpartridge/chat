@@ -1,81 +1,87 @@
 <?php
 
+use App\Models\Artifact;
 use App\Models\Chat;
 use App\Models\Message;
 
-it('has a valid factory', function () {
-    $message = Message::factory()->create();
+describe('factory', function () {
+    it('creates a valid message', function () {
+        $message = Message::factory()->create();
 
-    expect($message)->toBeInstanceOf(Message::class);
-    expect($message->exists)->toBeTrue();
+        expect($message)->toBeInstanceOf(Message::class);
+        expect($message->exists)->toBeTrue();
+    });
+
+    it('uses UUIDs as primary key', function () {
+        $message = Message::factory()->create();
+
+        expect($message->id)->toBeString();
+        expect(strlen($message->id))->toBe(36);
+    });
+
+    it('creates user messages via factory state', function () {
+        $message = Message::factory()->user()->create();
+
+        expect($message->role)->toBe('user');
+    });
+
+    it('creates assistant messages via factory state', function () {
+        $message = Message::factory()->assistant()->create();
+
+        expect($message->role)->toBe('assistant');
+    });
 });
 
-it('uses UUIDs as primary key', function () {
-    $message = Message::factory()->create();
+describe('relationships', function () {
+    it('belongs to a chat', function () {
+        $chat = Chat::factory()->create();
+        $message = Message::factory()->for($chat)->create();
 
-    expect($message->id)->toBeString();
-    expect(strlen($message->id))->toBe(36); // UUID format
+        expect($message->chat)->toBeInstanceOf(Chat::class);
+        expect($message->chat->id)->toBe($chat->id);
+    });
+
+    it('has many artifacts', function () {
+        $message = Message::factory()->create();
+        Artifact::factory()->count(3)->for($message)->create();
+
+        expect($message->artifacts)->toHaveCount(3);
+        expect($message->artifacts->first())->toBeInstanceOf(Artifact::class);
+    });
 });
 
-it('belongs to a chat', function () {
-    $chat = Chat::factory()->create();
-    $message = Message::factory()->for($chat)->create();
+describe('attributes', function () {
+    it('has a role attribute', function () {
+        $message = Message::factory()->create(['role' => 'user']);
 
-    expect($message->chat)->toBeInstanceOf(Chat::class);
-    expect($message->chat->id)->toBe($chat->id);
-});
+        expect($message->role)->toBe('user');
+    });
 
-it('has a role attribute', function () {
-    $message = Message::factory()->create(['role' => 'user']);
+    it('has a parts attribute as array', function () {
+        $message = Message::factory()->create([
+            'parts' => ['text' => 'Hello, world!'],
+        ]);
 
-    expect($message->role)->toBe('user');
-});
+        expect($message->parts)->toBeArray();
+        expect($message->parts['text'])->toBe('Hello, world!');
+    });
 
-it('has a parts attribute as array', function () {
-    $message = Message::factory()->create([
-        'parts' => ['text' => 'Hello, world!'],
-    ]);
+    it('casts parts to array automatically', function () {
+        $message = Message::factory()->create([
+            'parts' => ['text' => 'Test message', 'additional' => 'data'],
+        ]);
 
-    expect($message->parts)->toBeArray();
-    expect($message->parts['text'])->toBe('Hello, world!');
-});
+        $message->refresh();
 
-it('casts parts to array automatically', function () {
-    $message = Message::factory()->create([
-        'parts' => ['text' => 'Test message', 'additional' => 'data'],
-    ]);
+        expect($message->parts)->toBeArray();
+        expect($message->parts['text'])->toBe('Test message');
+        expect($message->parts['additional'])->toBe('data');
+    });
 
-    // Refresh from database to verify casting works
-    $message->refresh();
+    it('has timestamps', function () {
+        $message = Message::factory()->create();
 
-    expect($message->parts)->toBeArray();
-    expect($message->parts['text'])->toBe('Test message');
-    expect($message->parts['additional'])->toBe('data');
-});
-
-it('can create user messages via factory state', function () {
-    $message = Message::factory()->user()->create();
-
-    expect($message->role)->toBe('user');
-});
-
-it('can create assistant messages via factory state', function () {
-    $message = Message::factory()->assistant()->create();
-
-    expect($message->role)->toBe('assistant');
-});
-
-it('has timestamps', function () {
-    $message = Message::factory()->create();
-
-    expect($message->created_at)->not->toBeNull();
-    expect($message->updated_at)->not->toBeNull();
-});
-
-it('has many artifacts', function () {
-    $message = Message::factory()->create();
-    $artifacts = \App\Models\Artifact::factory()->count(3)->for($message)->create();
-
-    expect($message->artifacts)->toHaveCount(3);
-    expect($message->artifacts->first())->toBeInstanceOf(\App\Models\Artifact::class);
+        expect($message->created_at)->not->toBeNull();
+        expect($message->updated_at)->not->toBeNull();
+    });
 });
