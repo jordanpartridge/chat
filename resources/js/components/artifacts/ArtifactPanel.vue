@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { X, Copy, Download, ExternalLink, Loader2 } from 'lucide-vue-next';
+import { X, Copy, Download, ExternalLink } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import type { Artifact } from '@/types/chat';
 import { ArtifactType } from '@/types/chat';

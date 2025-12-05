@@ -148,3 +148,80 @@ OUTPUT
         ->and($result->entries[0]['priority'])->toBe('low')
         ->and($result->entries[0]['status'])->toBe('closed');
 });
+
+it('adds knowledge entry successfully', function () {
+    Process::fake([
+        '*' => Process::result(output: 'Knowledge entry added successfully'),
+    ]);
+
+    $service = new ConduitKnowledgeService;
+    $result = $service->add(
+        content: 'Test knowledge content',
+        tags: ['test', 'example'],
+        collection: 'docs',
+        priority: 'high'
+    );
+
+    expect($result)->toBeTrue();
+
+    Process::assertRan(function ($process) {
+        $command = $process->command;
+
+        return str_contains($command, 'knowledge:add')
+            && str_contains($command, '--tags=test,example')
+            && str_contains($command, '--collection=docs')
+            && str_contains($command, '--priority=high');
+    });
+});
+
+it('adds knowledge entry with minimal options', function () {
+    Process::fake([
+        '*' => Process::result(output: 'Knowledge entry added'),
+    ]);
+
+    $service = new ConduitKnowledgeService;
+    $result = $service->add('Simple content');
+
+    expect($result)->toBeTrue();
+
+    Process::assertRan(function ($process) {
+        $command = $process->command;
+
+        return str_contains($command, 'knowledge:add')
+            && str_contains($command, '--priority=medium')
+            && ! str_contains($command, '--tags=')
+            && ! str_contains($command, '--collection=');
+    });
+});
+
+it('returns false when add fails', function () {
+    Process::fake([
+        '*' => Process::result(
+            output: '',
+            errorOutput: 'Failed to add entry',
+            exitCode: 1
+        ),
+    ]);
+
+    $service = new ConduitKnowledgeService;
+    $result = $service->add('Test content');
+
+    expect($result)->toBeFalse();
+});
+
+it('uses fallback conduit path when not found in common paths', function () {
+    // This test verifies the getConduitPath returns 'conduit' as fallback
+    // when file doesn't exist in common paths
+    Process::fake([
+        'which conduit' => Process::result(output: '', exitCode: 1),
+        '*' => Process::result(output: "🔍 Found 0 results\n"),
+    ]);
+
+    $service = new ConduitKnowledgeService;
+    $service->search('test');
+
+    // Should still run search using fallback 'conduit' command
+    Process::assertRan(function ($process) {
+        return str_contains($process->command, 'conduit') && str_contains($process->command, 'knowledge:search');
+    });
+});

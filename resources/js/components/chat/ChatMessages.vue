@@ -86,7 +86,7 @@ const groupedMessages = computed<MessageGroup[]>(() => {
 
         <!-- Messages grouped by date -->
         <div v-else class="py-4 relative">
-            <template v-for="(group, groupIndex) in groupedMessages" :key="group.date">
+            <template v-for="group in groupedMessages" :key="group.date">
                 <!-- Date Separator -->
                 <div class="date-separator px-4 md:px-6 sticky top-0 z-10 backdrop-blur-sm">
                     <span>{{ group.label }}</span>

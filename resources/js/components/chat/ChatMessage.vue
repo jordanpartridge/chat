@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Sparkles, Copy, Check, RotateCcw } from 'lucide-vue-next';
+import { Sparkles, Copy, Check } from 'lucide-vue-next';
 import { marked } from 'marked';
 import type { Message, Artifact } from '@/types/chat';
 import { Role } from '@/types/chat';

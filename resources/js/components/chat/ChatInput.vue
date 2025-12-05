@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Send, Loader2, Sparkles } from 'lucide-vue-next';
+import { Send, Loader2 } from 'lucide-vue-next';
 
 const props = defineProps<{
     disabled?: boolean;

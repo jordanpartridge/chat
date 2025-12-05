@@ -22,6 +22,18 @@ class AgentFactory extends Factory
         return [
             'name' => $this->faker->firstName,
             'description' => $this->faker->paragraph,
+            'user_id' => null,
+            'is_active' => true,
         ];
+    }
+
+    /**
+     * Create a system agent (no user).
+     */
+    public function system(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_id' => null,
+        ]);
     }
 }

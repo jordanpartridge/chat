@@ -16,7 +16,6 @@ import {
 import { type NavItem } from '@/types';
 import { Link, router } from '@inertiajs/vue3';
 import { BookOpen, Folder, Plus, MessageCircle, Sparkles } from 'lucide-vue-next';
-import AppLogo from './AppLogo.vue';
 import { index, store, show } from '@/actions/App/Http/Controllers/ChatController';
 import type { Chat } from '@/types/chat';
 

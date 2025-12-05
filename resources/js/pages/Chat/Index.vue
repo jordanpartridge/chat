@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageCircle, Plus, Sparkles, Zap } from 'lucide-vue-next';
+import { Plus, Sparkles, Zap } from 'lucide-vue-next';
 import type { Chat, Model } from '@/types/chat';
 import type { BreadcrumbItem } from '@/types';
 import { ref } from 'vue';

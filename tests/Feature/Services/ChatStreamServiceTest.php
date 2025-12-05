@@ -56,13 +56,13 @@ it('enables artifact tools for trigger words', function () {
     expect($chunks)->not->toBeEmpty();
 });
 
-it('enables laravel tools for trigger words', function () {
+it('enables laravel tools for trigger words with Groq model', function () {
     Prism::fake([createStreamTextResponse('Creating model')]);
 
     $chunks = iterator_to_array($this->service->stream(
         $this->chat,
         'Generate a laravel model for users',
-        ModelName::LLAMA32
+        ModelName::GROQ_LLAMA33_70B
     ));
 
     expect($chunks)->not->toBeEmpty();
@@ -185,6 +185,35 @@ it('enables tools for Groq models with trigger words', function () {
         $this->chat,
         'Create a diagram for me',
         ModelName::GROQ_LLAMA33_70B // Groq model supports tools
+    ));
+
+    expect($chunks)->not->toBeEmpty();
+});
+
+it('includes web search tool when available for Groq models', function () {
+    // Configure Tavily API key to enable web search
+    config(['services.tavily.api_key' => 'test-key']);
+
+    Prism::fake([createStreamTextResponse('Search results')]);
+
+    $chunks = iterator_to_array($this->service->stream(
+        $this->chat,
+        'What is the latest news?',
+        ModelName::GROQ_LLAMA33_70B
+    ));
+
+    expect($chunks)->not->toBeEmpty();
+});
+
+it('does not include web search tool when not configured', function () {
+    config(['services.tavily.api_key' => '']);
+
+    Prism::fake([createStreamTextResponse('No web search')]);
+
+    $chunks = iterator_to_array($this->service->stream(
+        $this->chat,
+        'What is the latest news?',
+        ModelName::GROQ_LLAMA33_70B
     ));
 
     expect($chunks)->not->toBeEmpty();
