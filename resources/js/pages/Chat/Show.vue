@@ -112,8 +112,8 @@ const supportsTools = computed(() => {
                             </div>
 
                             <!-- Model selector -->
-                            <Select v-model="selectedModel">
-                                <SelectTrigger class="w-[180px] glass-dark border-white/10 text-white text-sm">
+                            <Select v-model="selectedModel" data-test="model-selector">
+                                <SelectTrigger class="w-[180px] glass-dark border-white/10 text-white text-sm" data-test="model-selector-trigger">
                                     <SelectValue placeholder="Select model" />
                                 </SelectTrigger>
                                 <SelectContent class="glass-dark border-white/10">
