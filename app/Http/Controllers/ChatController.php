@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ModelName;
 use App\Http\Requests\StoreChatRequest;
+use App\Http\Requests\UpdateChatRequest;
 use App\Models\Chat;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,16 +48,9 @@ class ChatController extends Controller
         ]);
     }
 
-    public function update(Request $request, Chat $chat): RedirectResponse
+    public function update(UpdateChatRequest $request, Chat $chat): RedirectResponse
     {
-        abort_unless($chat->user_id === $request->user()->id, 403);
-
-        $validated = $request->validate([
-            'model' => ['sometimes', 'string'],
-            'title' => ['sometimes', 'string', 'max:255'],
-        ]);
-
-        $chat->update($validated);
+        $chat->update($request->validated());
 
         return back();
     }
