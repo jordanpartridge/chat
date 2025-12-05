@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
-use App\Enums\ModelName;
+use App\Models\AiModel;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -21,7 +23,17 @@ class ChatFactory extends Factory
         return [
             'user_id' => User::factory(),
             'title' => fake()->sentence(3),
-            'model' => fake()->randomElement(ModelName::cases())->value,
+            'ai_model_id' => AiModel::factory(),
         ];
+    }
+
+    /**
+     * Use a specific AI model.
+     */
+    public function withModel(AiModel $model): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'ai_model_id' => $model->id,
+        ]);
     }
 }

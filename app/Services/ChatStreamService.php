@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\ModelName;
 use App\Jobs\GenerateChatTitle;
+use App\Models\AiModel;
 use App\Models\Artifact;
 use App\Models\Chat;
 use App\Models\Message;
@@ -55,7 +55,7 @@ class ChatStreamService
      *
      * @return Generator<int, string, mixed, void>
      */
-    public function stream(Chat $chat, string $userMessage, ModelName $model): Generator
+    public function stream(Chat $chat, string $userMessage, AiModel $model): Generator
     {
         $this->reset();
 
@@ -65,14 +65,14 @@ class ChatStreamService
                 'parts' => ['text' => ''],
             ]);
 
-            // Only enable tools for models that support them (Groq models)
-            $tools = $model->supportsTools()
+            // Only enable tools for models that support them
+            $tools = $model->hasToolSupport()
                 ? $this->buildTools($userMessage, $this->assistantMessage->id)
                 : [];
             $messages = $this->buildConversationHistory($chat);
 
             $prismBuilder = Prism::text()
-                ->using($model->getProvider(), $model->value)
+                ->using($model->getPrismProvider(), $model->model_id)
                 ->withSystemPrompt($this->buildSystemPrompt(count($tools) > 0))
                 ->withMessages($messages);
 

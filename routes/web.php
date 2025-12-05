@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArtifactController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatStreamController;
+use App\Services\ModelSyncService;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -13,9 +14,9 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('dashboard', function () {
+Route::get('dashboard', function (ModelSyncService $modelSyncService) {
     $recentChats = auth()->user()->chats()->orderByDesc('updated_at')->limit(5)->get();
-    $models = \App\Enums\ModelName::getAvailableModels();
+    $models = $modelSyncService->syncAndGetAvailable();
 
     return Inertia::render('Dashboard', [
         'recentChats' => $recentChats,

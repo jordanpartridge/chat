@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Enums\ModelName;
 use App\Models\Chat;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -37,10 +36,16 @@ class GenerateChatTitle implements ShouldQueue
             ->join("\n");
 
         try {
-            $model = ModelName::from($this->chat->model);
+            $model = $this->chat->aiModel;
+
+            if ($model === null) {
+                Log::warning("Chat {$this->chat->id} has no AI model assigned");
+
+                return;
+            }
 
             $response = Prism::text()
-                ->using($model->getProvider(), $model->value)
+                ->using($model->getPrismProvider(), $model->model_id)
                 ->withSystemPrompt('Generate a short, descriptive title (3-6 words) for this conversation. Respond with ONLY the title, no quotes, no explanation.')
                 ->withPrompt("Conversation:\n{$conversationSummary}")
                 ->generate();

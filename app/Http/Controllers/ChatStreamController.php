@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\ModelName;
 use App\Http\Requests\ChatStreamRequest;
+use App\Models\AiModel;
 use App\Models\Chat;
 use App\Services\ChatStreamService;
 use Illuminate\Support\Facades\Response;
@@ -22,7 +22,15 @@ class ChatStreamController extends Controller
         abort_unless($chat->user_id === $request->user()->id, 403);
 
         $userMessage = $request->string('message')->trim()->value();
-        $model = $request->enum('model', ModelName::class) ?? ModelName::from($chat->model);
+
+        // Get model from request or fall back to chat's model
+        $aiModelId = $request->integer('ai_model_id') ?: $chat->ai_model_id;
+        $model = AiModel::findOrFail($aiModelId);
+
+        // Update chat's model if changed
+        if ($aiModelId !== $chat->ai_model_id) {
+            $chat->update(['ai_model_id' => $aiModelId]);
+        }
 
         $chat->messages()->create([
             'role' => 'user',

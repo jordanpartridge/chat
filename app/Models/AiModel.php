@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Prism\Prism\Enums\Provider;
 
 class AiModel extends Model
 {
@@ -21,6 +24,7 @@ class AiModel extends Model
         'speed_tier',
         'cost_tier',
         'enabled',
+        'is_available',
     ];
 
     protected function casts(): array
@@ -30,6 +34,7 @@ class AiModel extends Model
             'supports_tools' => 'boolean',
             'supports_vision' => 'boolean',
             'enabled' => 'boolean',
+            'is_available' => 'boolean',
         ];
     }
 
@@ -84,5 +89,27 @@ class AiModel extends Model
     public function scopeBySpeedTier(Builder $query, string $tier): Builder
     {
         return $query->where('speed_tier', $tier);
+    }
+
+    /**
+     * Get the Prism Provider enum for this model.
+     */
+    public function getPrismProvider(): Provider
+    {
+        return match ($this->provider) {
+            'ollama' => Provider::Ollama,
+            'groq' => Provider::Groq,
+            'openai' => Provider::OpenAI,
+            'anthropic' => Provider::Anthropic,
+            default => Provider::Ollama,
+        };
+    }
+
+    /**
+     * Check if this model has tool support enabled.
+     */
+    public function hasToolSupport(): bool
+    {
+        return $this->supports_tools;
     }
 }

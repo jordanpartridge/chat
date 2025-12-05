@@ -230,3 +230,133 @@ describe('error handling', function () {
         expect($content)->toContain('error');
     });
 });
+
+describe('tool result handling', function () {
+    it('handles laravel model tool results', function () {
+        // Use reflection to test the private handleToolResult method
+        $service = app(ChatStreamService::class);
+
+        $reflection = new ReflectionClass($service);
+        $method = $reflection->getMethod('handleToolResult');
+        $method->setAccessible(true);
+
+        $textProperty = $reflection->getProperty('text');
+        $textProperty->setAccessible(true);
+        $textProperty->setValue($service, '');
+
+        // Create a mock tool result event
+        $event = new class
+        {
+            public object $toolResult;
+
+            public function __construct()
+            {
+                $this->toolResult = new class
+                {
+                    public string $result = 'Generated User model with migration';
+
+                    public string $toolName = 'generate_laravel_model';
+                };
+            }
+        };
+
+        $generator = $method->invoke($service, $event);
+        $chunks = iterator_to_array($generator);
+
+        expect($chunks)->toHaveCount(1);
+        expect($chunks[0])->toContain('Generated User model');
+        expect($textProperty->getValue($service))->toContain('Generated User model');
+    });
+
+    it('does not handle laravel model tool errors', function () {
+        $service = app(ChatStreamService::class);
+
+        $reflection = new ReflectionClass($service);
+        $method = $reflection->getMethod('handleToolResult');
+        $method->setAccessible(true);
+
+        $event = new class
+        {
+            public object $toolResult;
+
+            public function __construct()
+            {
+                $this->toolResult = new class
+                {
+                    public string $result = 'Error: Invalid model name';
+
+                    public string $toolName = 'generate_laravel_model';
+                };
+            }
+        };
+
+        $generator = $method->invoke($service, $event);
+        $chunks = iterator_to_array($generator);
+
+        // Should not yield anything for errors
+        expect($chunks)->toHaveCount(0);
+    });
+
+    it('handles knowledge search tool results with context', function () {
+        $service = app(ChatStreamService::class);
+
+        $reflection = new ReflectionClass($service);
+        $method = $reflection->getMethod('handleToolResult');
+        $method->setAccessible(true);
+
+        $textProperty = $reflection->getProperty('text');
+        $textProperty->setAccessible(true);
+        $textProperty->setValue($service, '');
+
+        $event = new class
+        {
+            public object $toolResult;
+
+            public function __construct()
+            {
+                $this->toolResult = new class
+                {
+                    public string $result = "[knowledge:3 results]\n\nResult 1: Some knowledge content\nResult 2: More content";
+
+                    public string $toolName = 'search_knowledge';
+                };
+            }
+        };
+
+        $generator = $method->invoke($service, $event);
+        $chunks = iterator_to_array($generator);
+
+        expect($chunks)->toHaveCount(1);
+        expect($chunks[0])->toContain('Knowledge Base Results');
+        expect($textProperty->getValue($service))->toContain('Result 1: Some knowledge content');
+    });
+
+    it('does not handle knowledge search results without context', function () {
+        $service = app(ChatStreamService::class);
+
+        $reflection = new ReflectionClass($service);
+        $method = $reflection->getMethod('handleToolResult');
+        $method->setAccessible(true);
+
+        $event = new class
+        {
+            public object $toolResult;
+
+            public function __construct()
+            {
+                $this->toolResult = new class
+                {
+                    public string $result = '[knowledge:0 results]';
+
+                    public string $toolName = 'search_knowledge';
+                };
+            }
+        };
+
+        $generator = $method->invoke($service, $event);
+        $chunks = iterator_to_array($generator);
+
+        // No double newline means no context to display
+        expect($chunks)->toHaveCount(0);
+    });
+});

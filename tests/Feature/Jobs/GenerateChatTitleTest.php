@@ -131,6 +131,29 @@ describe('validation', function () {
         expect($chat->title)->toBe('Original Title');
     });
 
+    it('logs warning and returns early when chat has no AI model', function () {
+        Log::spy();
+
+        $chat = Chat::factory()->create([
+            'title' => 'Original Title',
+            'ai_model_id' => null,
+        ]);
+
+        Message::factory()->for($chat)->user()->create([
+            'parts' => ['text' => 'Test message'],
+        ]);
+
+        $job = new GenerateChatTitle($chat);
+        $job->handle();
+
+        Log::shouldHaveReceived('warning')
+            ->once()
+            ->withArgs(fn ($message) => str_contains($message, 'has no AI model assigned'));
+
+        $chat->refresh();
+        expect($chat->title)->toBe('Original Title');
+    });
+
     it('does not update title when generated title is empty', function () {
         Prism::fake([createTitleResponse('   ')]);
 

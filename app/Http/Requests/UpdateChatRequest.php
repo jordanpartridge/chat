@@ -25,7 +25,7 @@ class UpdateChatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'model' => ['sometimes', 'string'],
+            'ai_model_id' => ['sometimes', 'integer', 'exists:ai_models,id'],
             'title' => ['sometimes', 'string', 'max:255'],
         ];
     }

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Requests\UpdateChatRequest;
+use App\Models\AiModel;
 use App\Models\Chat;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
@@ -62,12 +63,20 @@ it('denies when chat is not found', function () {
     expect($request->authorize())->toBeFalse();
 });
 
-it('validates model as optional string', function () {
+it('validates ai_model_id as optional integer', function () {
     $request = new UpdateChatRequest;
-    $validator = Validator::make(['model' => 123], $request->rules());
+    $validator = Validator::make(['ai_model_id' => 'not-an-integer'], $request->rules());
 
     expect($validator->fails())->toBeTrue()
-        ->and($validator->errors()->has('model'))->toBeTrue();
+        ->and($validator->errors()->has('ai_model_id'))->toBeTrue();
+});
+
+it('validates ai_model_id must exist in database', function () {
+    $request = new UpdateChatRequest;
+    $validator = Validator::make(['ai_model_id' => 99999], $request->rules());
+
+    expect($validator->fails())->toBeTrue()
+        ->and($validator->errors()->has('ai_model_id'))->toBeTrue();
 });
 
 it('validates title max length', function () {
@@ -79,9 +88,11 @@ it('validates title max length', function () {
 });
 
 it('passes with valid update data', function () {
+    $model = AiModel::factory()->create();
+
     $request = new UpdateChatRequest;
     $validator = Validator::make([
-        'model' => 'llama3.2',
+        'ai_model_id' => $model->id,
         'title' => 'Updated Title',
     ], $request->rules());
 
