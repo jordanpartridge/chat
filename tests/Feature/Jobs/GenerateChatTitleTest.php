@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\ModelName;
 use App\Jobs\GenerateChatTitle;
+use App\Models\AiModel;
 use App\Models\Chat;
 use App\Models\Message;
 use Illuminate\Support\Facades\Log;
@@ -25,175 +25,195 @@ function createTitleResponse(string $text): TextResponse
     );
 }
 
-it('generates a title from conversation messages', function () {
-    Prism::fake([createTitleResponse('Weather Discussion')]);
+describe('title generation', function () {
+    it('generates a title from conversation messages', function () {
+        Prism::fake([createTitleResponse('Weather Discussion')]);
 
-    $chat = Chat::factory()->create([
-        'title' => 'New Chat',
-        'model' => ModelName::LLAMA32->value,
-    ]);
+        $model = AiModel::factory()->create();
+        $chat = Chat::factory()->create([
+            'title' => 'New Chat',
+            'ai_model_id' => $model->id,
+        ]);
 
-    Message::factory()->for($chat)->user()->create([
-        'parts' => ['text' => 'What is the weather like today?'],
-    ]);
-    Message::factory()->for($chat)->assistant()->create([
-        'parts' => ['text' => 'It looks like a sunny day!'],
-    ]);
+        Message::factory()->for($chat)->user()->create([
+            'parts' => ['text' => 'What is the weather like today?'],
+        ]);
+        Message::factory()->for($chat)->assistant()->create([
+            'parts' => ['text' => 'It looks like a sunny day!'],
+        ]);
 
-    $job = new GenerateChatTitle($chat);
-    $job->handle();
+        $job = new GenerateChatTitle($chat);
+        $job->handle();
 
-    $chat->refresh();
-    expect($chat->title)->toBe('Weather Discussion');
-});
-
-it('does nothing when chat has no messages', function () {
-    $chat = Chat::factory()->create([
-        'title' => 'Original Title',
-        'model' => ModelName::LLAMA32->value,
-    ]);
-
-    $job = new GenerateChatTitle($chat);
-    $job->handle();
-
-    $chat->refresh();
-    expect($chat->title)->toBe('Original Title');
-});
-
-it('cleans up markdown artifacts from generated title', function () {
-    Prism::fake([createTitleResponse('**Bold Title**')]);
-
-    $chat = Chat::factory()->create([
-        'title' => 'New Chat',
-        'model' => ModelName::LLAMA32->value,
-    ]);
-
-    Message::factory()->for($chat)->user()->create([
-        'parts' => ['text' => 'Test message'],
-    ]);
-
-    $job = new GenerateChatTitle($chat);
-    $job->handle();
-
-    $chat->refresh();
-    expect($chat->title)->toBe('Bold Title');
-});
-
-it('removes quotes from generated title', function () {
-    Prism::fake([createTitleResponse('"Quoted Title"')]);
-
-    $chat = Chat::factory()->create([
-        'title' => 'New Chat',
-        'model' => ModelName::LLAMA32->value,
-    ]);
-
-    Message::factory()->for($chat)->user()->create([
-        'parts' => ['text' => 'Test message'],
-    ]);
-
-    $job = new GenerateChatTitle($chat);
-    $job->handle();
-
-    $chat->refresh();
-    expect($chat->title)->toBe('Quoted Title');
-});
-
-it('does not update title when generated title is empty', function () {
-    Prism::fake([createTitleResponse('   ')]);
-
-    $chat = Chat::factory()->create([
-        'title' => 'Original Title',
-        'model' => ModelName::LLAMA32->value,
-    ]);
-
-    Message::factory()->for($chat)->user()->create([
-        'parts' => ['text' => 'Test message'],
-    ]);
-
-    $job = new GenerateChatTitle($chat);
-    $job->handle();
-
-    $chat->refresh();
-    expect($chat->title)->toBe('Original Title');
-});
-
-it('does not update title when generated title exceeds 100 characters', function () {
-    $longTitle = str_repeat('a', 101);
-    Prism::fake([createTitleResponse($longTitle)]);
-
-    $chat = Chat::factory()->create([
-        'title' => 'Original Title',
-        'model' => ModelName::LLAMA32->value,
-    ]);
-
-    Message::factory()->for($chat)->user()->create([
-        'parts' => ['text' => 'Test message'],
-    ]);
-
-    $job = new GenerateChatTitle($chat);
-    $job->handle();
-
-    $chat->refresh();
-    expect($chat->title)->toBe('Original Title');
-});
-
-it('logs warning when Prism throws exception', function () {
-    Log::spy();
-
-    $chat = Chat::factory()->create([
-        'title' => 'Original Title',
-        'model' => ModelName::LLAMA32->value,
-    ]);
-
-    Message::factory()->for($chat)->user()->create([
-        'parts' => ['text' => 'Test message'],
-    ]);
-
-    // Mock to throw an exception
-    $this->mock(\Prism\Prism\PrismManager::class, function ($mock) {
-        $pendingRequest = $this->mock(\Prism\Prism\Text\PendingRequest::class);
-        $pendingRequest->shouldReceive('using')->andReturnSelf();
-        $pendingRequest->shouldReceive('withSystemPrompt')->andReturnSelf();
-        $pendingRequest->shouldReceive('withPrompt')->andReturnSelf();
-        $pendingRequest->shouldReceive('generate')->andThrow(new \RuntimeException('API error'));
-
-        $mock->shouldReceive('text')->andReturn($pendingRequest);
+        $chat->refresh();
+        expect($chat->title)->toBe('Weather Discussion');
     });
 
-    $job = new GenerateChatTitle($chat);
-    $job->handle();
+    it('uses the chat model for title generation', function () {
+        $fake = Prism::fake([createTitleResponse('Test Title')]);
 
-    Log::shouldHaveReceived('warning')
-        ->once()
-        ->withArgs(fn ($message) => str_contains($message, 'Failed to generate chat title'));
+        $model = AiModel::factory()->create([
+            'provider' => 'ollama',
+            'model_id' => 'mistral',
+        ]);
+        $chat = Chat::factory()->create([
+            'title' => 'New Chat',
+            'ai_model_id' => $model->id,
+        ]);
 
-    $chat->refresh();
-    expect($chat->title)->toBe('Original Title');
-});
+        Message::factory()->for($chat)->user()->create([
+            'parts' => ['text' => 'Test message'],
+        ]);
 
-it('uses the chat model for title generation', function () {
-    $fake = Prism::fake([createTitleResponse('Test Title')]);
+        $job = new GenerateChatTitle($chat);
+        $job->handle();
 
-    $chat = Chat::factory()->create([
-        'title' => 'New Chat',
-        'model' => ModelName::MISTRAL->value,
-    ]);
-
-    Message::factory()->for($chat)->user()->create([
-        'parts' => ['text' => 'Test message'],
-    ]);
-
-    $job = new GenerateChatTitle($chat);
-    $job->handle();
-
-    $fake->assertRequest(function ($requests) {
-        expect($requests[0]->model())->toBe(ModelName::MISTRAL->value);
+        $fake->assertRequest(function ($requests) {
+            expect($requests[0]->model())->toBe('mistral');
+        });
     });
 });
 
-it('implements ShouldQueue interface', function () {
-    $chat = Chat::factory()->create();
-    $job = new GenerateChatTitle($chat);
+describe('title cleanup', function () {
+    it('cleans up markdown artifacts from generated title', function () {
+        Prism::fake([createTitleResponse('**Bold Title**')]);
 
-    expect($job)->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldQueue::class);
+        $model = AiModel::factory()->create();
+        $chat = Chat::factory()->create([
+            'title' => 'New Chat',
+            'ai_model_id' => $model->id,
+        ]);
+
+        Message::factory()->for($chat)->user()->create([
+            'parts' => ['text' => 'Test message'],
+        ]);
+
+        $job = new GenerateChatTitle($chat);
+        $job->handle();
+
+        $chat->refresh();
+        expect($chat->title)->toBe('Bold Title');
+    });
+
+    it('removes quotes from generated title', function () {
+        Prism::fake([createTitleResponse('"Quoted Title"')]);
+
+        $model = AiModel::factory()->create();
+        $chat = Chat::factory()->create([
+            'title' => 'New Chat',
+            'ai_model_id' => $model->id,
+        ]);
+
+        Message::factory()->for($chat)->user()->create([
+            'parts' => ['text' => 'Test message'],
+        ]);
+
+        $job = new GenerateChatTitle($chat);
+        $job->handle();
+
+        $chat->refresh();
+        expect($chat->title)->toBe('Quoted Title');
+    });
+});
+
+describe('validation', function () {
+    it('does nothing when chat has no messages', function () {
+        $model = AiModel::factory()->create();
+        $chat = Chat::factory()->create([
+            'title' => 'Original Title',
+            'ai_model_id' => $model->id,
+        ]);
+
+        $job = new GenerateChatTitle($chat);
+        $job->handle();
+
+        $chat->refresh();
+        expect($chat->title)->toBe('Original Title');
+    });
+
+    it('does not update title when generated title is empty', function () {
+        Prism::fake([createTitleResponse('   ')]);
+
+        $model = AiModel::factory()->create();
+        $chat = Chat::factory()->create([
+            'title' => 'Original Title',
+            'ai_model_id' => $model->id,
+        ]);
+
+        Message::factory()->for($chat)->user()->create([
+            'parts' => ['text' => 'Test message'],
+        ]);
+
+        $job = new GenerateChatTitle($chat);
+        $job->handle();
+
+        $chat->refresh();
+        expect($chat->title)->toBe('Original Title');
+    });
+
+    it('does not update title when generated title exceeds 100 characters', function () {
+        $longTitle = str_repeat('a', 101);
+        Prism::fake([createTitleResponse($longTitle)]);
+
+        $model = AiModel::factory()->create();
+        $chat = Chat::factory()->create([
+            'title' => 'Original Title',
+            'ai_model_id' => $model->id,
+        ]);
+
+        Message::factory()->for($chat)->user()->create([
+            'parts' => ['text' => 'Test message'],
+        ]);
+
+        $job = new GenerateChatTitle($chat);
+        $job->handle();
+
+        $chat->refresh();
+        expect($chat->title)->toBe('Original Title');
+    });
+});
+
+describe('error handling', function () {
+    it('logs warning when Prism throws exception', function () {
+        Log::spy();
+
+        $model = AiModel::factory()->create();
+        $chat = Chat::factory()->create([
+            'title' => 'Original Title',
+            'ai_model_id' => $model->id,
+        ]);
+
+        Message::factory()->for($chat)->user()->create([
+            'parts' => ['text' => 'Test message'],
+        ]);
+
+        $this->mock(\Prism\Prism\PrismManager::class, function ($mock) {
+            $pendingRequest = $this->mock(\Prism\Prism\Text\PendingRequest::class);
+            $pendingRequest->shouldReceive('using')->andReturnSelf();
+            $pendingRequest->shouldReceive('withSystemPrompt')->andReturnSelf();
+            $pendingRequest->shouldReceive('withPrompt')->andReturnSelf();
+            $pendingRequest->shouldReceive('generate')->andThrow(new \RuntimeException('API error'));
+
+            $mock->shouldReceive('text')->andReturn($pendingRequest);
+        });
+
+        $job = new GenerateChatTitle($chat);
+        $job->handle();
+
+        Log::shouldHaveReceived('warning')
+            ->once()
+            ->withArgs(fn ($message) => str_contains($message, 'Failed to generate chat title'));
+
+        $chat->refresh();
+        expect($chat->title)->toBe('Original Title');
+    });
+});
+
+describe('queue', function () {
+    it('implements ShouldQueue interface', function () {
+        $chat = Chat::factory()->create();
+        $job = new GenerateChatTitle($chat);
+
+        expect($job)->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldQueue::class);
+    });
 });
