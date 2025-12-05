@@ -12,6 +12,7 @@ use App\Models\Message;
 use App\Tools\ConduitKnowledgeTool;
 use App\Tools\CreateArtifactTool;
 use App\Tools\GenerateLaravelModelTool;
+use App\Tools\WebSearchTool;
 use Generator;
 use Illuminate\Support\Facades\Log;
 use Prism\Prism\Enums\StreamEventType;
@@ -120,6 +121,12 @@ class ChatStreamService
 
         // Always include knowledge tool - let the model decide when to use it
         $tools[] = app(ConduitKnowledgeTool::class);
+
+        // Include web search as fallback for external information
+        $webSearchTool = app(WebSearchTool::class);
+        if ($webSearchTool->isAvailable()) {
+            $tools[] = $webSearchTool;
+        }
 
         return $tools;
     }
@@ -287,15 +294,17 @@ IMPORTANT - TOOL USAGE RULES:
   * create_artifact - for visual content (diagrams, components, etc.)
   * generate_laravel_model - for Laravel code scaffolding
   * search_knowledge - searches a personal knowledge base with notes, insights, and project info
+  * search_web - searches the internet for current/external information (if available)
 - ONLY use tools that are available. Do not invent tools or call tools that don't exist.
 - If no tool is appropriate, just respond with text.
 - NEVER generate URLs or links. The UI will display results automatically.
 
-KNOWLEDGE SEARCH GUIDANCE:
-- Use search_knowledge when the user asks about specific projects, frameworks, people, or topics that might be in their personal notes
-- Use it when you don't have specific information but the user seems to expect you to know something
-- Examples: "What is Conduit?", "Tell me about the SHIT framework", "What are the recommendations for X?"
-- Do NOT use it for general knowledge questions you can answer yourself
+SEARCH STRATEGY:
+1. First try search_knowledge for personal projects, frameworks, insights, or topics that might be in notes
+2. If search_knowledge returns no results AND the question is about external/public information, try search_web
+3. Do NOT use search_web for questions you can answer from your own knowledge
+4. Examples for search_knowledge: "What is Conduit?", "Tell me about the SHIT framework", "What are my notes on X?"
+5. Examples for search_web: "Latest news about Laravel", "What is company X?", "Current info about person Y"
 
 CRITICAL - AFTER USING A TOOL:
 - After you receive tool results, you MUST respond with a text message to the user.

@@ -15,7 +15,7 @@ class ConduitKnowledgeTool extends Tool
     ) {
         $this
             ->as('search_knowledge')
-            ->for('Search the knowledge base. Call this ONCE, then respond to the user with the results. Do NOT call this tool multiple times.')
+            ->for('Search the personal knowledge base. Call this ONCE, then respond with the results. IMPORTANT: Only state facts found in the search results. Do NOT infer, embellish, or add information not explicitly returned. If the search returns no results, say so - do not guess.')
             ->withStringParameter('query', 'The search query - what information to look for')
             ->using($this->execute(...));
     }
