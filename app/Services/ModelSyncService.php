@@ -49,6 +49,11 @@ class ModelSyncService
 
         $this->syncOllama();
         $this->syncGroq();
+        $this->syncOpenAI();
+        $this->syncAnthropic();
+        $this->syncXAI();
+        $this->syncGemini();
+        $this->syncMistral();
 
         Cache::put(self::CACHE_KEY, true, self::CACHE_TTL);
     }
@@ -102,6 +107,81 @@ class ModelSyncService
             ->update(['is_available' => $isAvailable]);
 
         Log::debug('Groq models synced', ['available' => $isAvailable]);
+    }
+
+    /**
+     * Sync OpenAI models by checking if API key is configured.
+     */
+    public function syncOpenAI(): void
+    {
+        $apiKey = config('prism.providers.openai.api_key');
+        $isAvailable = ! empty($apiKey);
+
+        AiModel::query()
+            ->where('provider', 'openai')
+            ->update(['is_available' => $isAvailable]);
+
+        Log::debug('OpenAI models synced', ['available' => $isAvailable]);
+    }
+
+    /**
+     * Sync Anthropic models by checking if API key is configured.
+     */
+    public function syncAnthropic(): void
+    {
+        $apiKey = config('prism.providers.anthropic.api_key');
+        $isAvailable = ! empty($apiKey);
+
+        AiModel::query()
+            ->where('provider', 'anthropic')
+            ->update(['is_available' => $isAvailable]);
+
+        Log::debug('Anthropic models synced', ['available' => $isAvailable]);
+    }
+
+    /**
+     * Sync xAI models by checking if API key is configured.
+     */
+    public function syncXAI(): void
+    {
+        $apiKey = config('prism.providers.xai.api_key');
+        $isAvailable = ! empty($apiKey);
+
+        AiModel::query()
+            ->where('provider', 'xai')
+            ->update(['is_available' => $isAvailable]);
+
+        Log::debug('xAI models synced', ['available' => $isAvailable]);
+    }
+
+    /**
+     * Sync Gemini models by checking if API key is configured.
+     */
+    public function syncGemini(): void
+    {
+        $apiKey = config('prism.providers.gemini.api_key');
+        $isAvailable = ! empty($apiKey);
+
+        AiModel::query()
+            ->where('provider', 'gemini')
+            ->update(['is_available' => $isAvailable]);
+
+        Log::debug('Gemini models synced', ['available' => $isAvailable]);
+    }
+
+    /**
+     * Sync Mistral models by checking if API key is configured.
+     */
+    public function syncMistral(): void
+    {
+        $apiKey = config('prism.providers.mistral.api_key');
+        $isAvailable = ! empty($apiKey);
+
+        AiModel::query()
+            ->where('provider', 'mistral')
+            ->update(['is_available' => $isAvailable]);
+
+        Log::debug('Mistral models synced', ['available' => $isAvailable]);
     }
 
     /**

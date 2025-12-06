@@ -22,6 +22,26 @@ class User extends Authenticatable
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<UserApiCredential, $this>
+     */
+    public function apiCredentials(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserApiCredential::class);
+    }
+
+    /**
+     * Get the API key for a specific provider.
+     */
+    public function getApiKeyFor(string $provider): ?string
+    {
+        return $this->apiCredentials()
+            ->forProvider($provider)
+            ->where('is_enabled', true)
+            ->first()
+            ?->api_key;
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>

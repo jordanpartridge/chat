@@ -267,6 +267,196 @@ describe('syncGroq', function () {
     });
 });
 
+describe('syncOpenAI', function () {
+    it('marks OpenAI models available when API key is configured', function () {
+        config(['prism.providers.openai.api_key' => 'sk-test-key']);
+
+        $model = AiModel::factory()->create([
+            'provider' => 'openai',
+            'is_available' => false,
+        ]);
+
+        Log::shouldReceive('debug')
+            ->once()
+            ->with('OpenAI models synced', ['available' => true]);
+
+        $service = app(ModelSyncService::class);
+        $service->syncOpenAI();
+
+        expect($model->fresh()->is_available)->toBeTrue();
+    });
+
+    it('marks OpenAI models unavailable when no API key', function () {
+        config(['prism.providers.openai.api_key' => '']);
+
+        $model = AiModel::factory()->create([
+            'provider' => 'openai',
+            'is_available' => true,
+        ]);
+
+        Log::shouldReceive('debug')
+            ->once()
+            ->with('OpenAI models synced', ['available' => false]);
+
+        $service = app(ModelSyncService::class);
+        $service->syncOpenAI();
+
+        expect($model->fresh()->is_available)->toBeFalse();
+    });
+});
+
+describe('syncAnthropic', function () {
+    it('marks Anthropic models available when API key is configured', function () {
+        config(['prism.providers.anthropic.api_key' => 'sk-ant-test-key']);
+
+        $model = AiModel::factory()->create([
+            'provider' => 'anthropic',
+            'is_available' => false,
+        ]);
+
+        Log::shouldReceive('debug')
+            ->once()
+            ->with('Anthropic models synced', ['available' => true]);
+
+        $service = app(ModelSyncService::class);
+        $service->syncAnthropic();
+
+        expect($model->fresh()->is_available)->toBeTrue();
+    });
+
+    it('marks Anthropic models unavailable when no API key', function () {
+        config(['prism.providers.anthropic.api_key' => '']);
+
+        $model = AiModel::factory()->create([
+            'provider' => 'anthropic',
+            'is_available' => true,
+        ]);
+
+        Log::shouldReceive('debug')
+            ->once()
+            ->with('Anthropic models synced', ['available' => false]);
+
+        $service = app(ModelSyncService::class);
+        $service->syncAnthropic();
+
+        expect($model->fresh()->is_available)->toBeFalse();
+    });
+});
+
+describe('syncXAI', function () {
+    it('marks xAI models available when API key is configured', function () {
+        config(['prism.providers.xai.api_key' => 'xai-test-key']);
+
+        $model = AiModel::factory()->create([
+            'provider' => 'xai',
+            'is_available' => false,
+        ]);
+
+        Log::shouldReceive('debug')
+            ->once()
+            ->with('xAI models synced', ['available' => true]);
+
+        $service = app(ModelSyncService::class);
+        $service->syncXAI();
+
+        expect($model->fresh()->is_available)->toBeTrue();
+    });
+
+    it('marks xAI models unavailable when no API key', function () {
+        config(['prism.providers.xai.api_key' => '']);
+
+        $model = AiModel::factory()->create([
+            'provider' => 'xai',
+            'is_available' => true,
+        ]);
+
+        Log::shouldReceive('debug')
+            ->once()
+            ->with('xAI models synced', ['available' => false]);
+
+        $service = app(ModelSyncService::class);
+        $service->syncXAI();
+
+        expect($model->fresh()->is_available)->toBeFalse();
+    });
+});
+
+describe('syncGemini', function () {
+    it('marks Gemini models available when API key is configured', function () {
+        config(['prism.providers.gemini.api_key' => 'gemini-test-key']);
+
+        $model = AiModel::factory()->create([
+            'provider' => 'gemini',
+            'is_available' => false,
+        ]);
+
+        Log::shouldReceive('debug')
+            ->once()
+            ->with('Gemini models synced', ['available' => true]);
+
+        $service = app(ModelSyncService::class);
+        $service->syncGemini();
+
+        expect($model->fresh()->is_available)->toBeTrue();
+    });
+
+    it('marks Gemini models unavailable when no API key', function () {
+        config(['prism.providers.gemini.api_key' => '']);
+
+        $model = AiModel::factory()->create([
+            'provider' => 'gemini',
+            'is_available' => true,
+        ]);
+
+        Log::shouldReceive('debug')
+            ->once()
+            ->with('Gemini models synced', ['available' => false]);
+
+        $service = app(ModelSyncService::class);
+        $service->syncGemini();
+
+        expect($model->fresh()->is_available)->toBeFalse();
+    });
+});
+
+describe('syncMistral', function () {
+    it('marks Mistral models available when API key is configured', function () {
+        config(['prism.providers.mistral.api_key' => 'mistral-test-key']);
+
+        $model = AiModel::factory()->create([
+            'provider' => 'mistral',
+            'is_available' => false,
+        ]);
+
+        Log::shouldReceive('debug')
+            ->once()
+            ->with('Mistral models synced', ['available' => true]);
+
+        $service = app(ModelSyncService::class);
+        $service->syncMistral();
+
+        expect($model->fresh()->is_available)->toBeTrue();
+    });
+
+    it('marks Mistral models unavailable when no API key', function () {
+        config(['prism.providers.mistral.api_key' => '']);
+
+        $model = AiModel::factory()->create([
+            'provider' => 'mistral',
+            'is_available' => true,
+        ]);
+
+        Log::shouldReceive('debug')
+            ->once()
+            ->with('Mistral models synced', ['available' => false]);
+
+        $service = app(ModelSyncService::class);
+        $service->syncMistral();
+
+        expect($model->fresh()->is_available)->toBeFalse();
+    });
+});
+
 describe('getDefaultModel', function () {
     it('returns first available enabled model with tool support', function () {
         $withTools = AiModel::factory()->create([

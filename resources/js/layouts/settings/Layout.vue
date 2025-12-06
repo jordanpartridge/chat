@@ -9,6 +9,7 @@ import { show } from '@/routes/two-factor';
 import { edit as editPassword } from '@/routes/user-password';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
+import { Key } from 'lucide-vue-next';
 
 const sidebarNavItems: NavItem[] = [
     {
@@ -22,6 +23,11 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Two-Factor Auth',
         href: show(),
+    },
+    {
+        title: 'Providers',
+        href: { url: '/settings/providers', method: 'get' },
+        icon: Key,
     },
     {
         title: 'Appearance',

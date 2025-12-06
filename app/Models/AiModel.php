@@ -101,6 +101,9 @@ class AiModel extends Model
             'groq' => Provider::Groq,
             'openai' => Provider::OpenAI,
             'anthropic' => Provider::Anthropic,
+            'xai' => Provider::XAI,
+            'gemini' => Provider::Gemini,
+            'mistral' => Provider::Mistral,
             default => Provider::Ollama,
         };
     }
