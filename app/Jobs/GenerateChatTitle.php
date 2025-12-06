@@ -21,6 +21,8 @@ class GenerateChatTitle implements ShouldQueue
 
     public function handle(): void
     {
+        $this->chat->loadMissing('aiModel');
+
         $messages = $this->chat->messages()
             ->orderByDesc('created_at')
             ->limit(6)

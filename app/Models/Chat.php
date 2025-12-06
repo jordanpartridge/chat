@@ -24,6 +24,7 @@ class Chat extends Model
         'user_id',
         'title',
         'ai_model_id',
+        'agent_id',
     ];
 
     /**
@@ -48,5 +49,13 @@ class Chat extends Model
     public function aiModel(): BelongsTo
     {
         return $this->belongsTo(AiModel::class);
+    }
+
+    /**
+     * @return BelongsTo<Agent, $this>
+     */
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class);
     }
 }

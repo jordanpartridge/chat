@@ -7,6 +7,33 @@ beforeEach(function () {
     Http::preventStrayRequests();
 });
 
+describe('configuration', function () {
+    it('uses config values by default', function () {
+        config(['services.ollama.base_url' => 'http://custom-ollama:8080']);
+        config(['services.ollama.timeout' => 10]);
+
+        Http::fake([
+            'custom-ollama:8080/api/tags' => Http::response(['models' => []]),
+        ]);
+
+        $service = new OllamaService;
+        $service->getAvailableModels();
+
+        Http::assertSent(fn ($request) => $request->url() === 'http://custom-ollama:8080/api/tags');
+    });
+
+    it('allows override via constructor', function () {
+        Http::fake([
+            'override-host:9999/api/tags' => Http::response(['models' => []]),
+        ]);
+
+        $service = new OllamaService('http://override-host:9999', 15);
+        $service->getAvailableModels();
+
+        Http::assertSent(fn ($request) => $request->url() === 'http://override-host:9999/api/tags');
+    });
+});
+
 describe('models', function () {
     it('returns available models from ollama api', function () {
         Http::fake([
