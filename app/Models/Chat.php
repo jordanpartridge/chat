@@ -23,7 +23,7 @@ class Chat extends Model
     protected $fillable = [
         'user_id',
         'title',
-        'model',
+        'ai_model_id',
     ];
 
     /**
@@ -40,5 +40,13 @@ class Chat extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<AiModel, $this>
+     */
+    public function aiModel(): BelongsTo
+    {
+        return $this->belongsTo(AiModel::class);
     }
 }

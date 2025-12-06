@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Enums\ModelName;
+use App\Models\AiModel;
 use App\Models\Chat;
 use App\Models\User;
 
@@ -13,7 +13,8 @@ it('can view a chat page', function (): void {
         'two_factor_secret' => null,
         'two_factor_confirmed_at' => null,
     ]);
-    $chat = Chat::factory()->for($user)->create();
+    $model = AiModel::factory()->create(['is_available' => true]);
+    $chat = Chat::factory()->for($user)->create(['ai_model_id' => $model->id]);
 
     $this->actingAs($user);
 
@@ -28,7 +29,8 @@ it('chat page has proper CSRF meta tag', function (): void {
         'two_factor_secret' => null,
         'two_factor_confirmed_at' => null,
     ]);
-    $chat = Chat::factory()->for($user)->create();
+    $model = AiModel::factory()->create(['is_available' => true]);
+    $chat = Chat::factory()->for($user)->create(['ai_model_id' => $model->id]);
 
     $this->actingAs($user);
 
@@ -44,9 +46,8 @@ it('can access the chat input form', function (): void {
         'two_factor_secret' => null,
         'two_factor_confirmed_at' => null,
     ]);
-    $chat = Chat::factory()->for($user)->create([
-        'model' => ModelName::LLAMA32->value,
-    ]);
+    $model = AiModel::factory()->create(['is_available' => true]);
+    $chat = Chat::factory()->for($user)->create(['ai_model_id' => $model->id]);
 
     $this->actingAs($user);
 

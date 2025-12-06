@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Enums\ModelName;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class ChatStreamRequest extends FormRequest
 {
@@ -22,7 +20,7 @@ class ChatStreamRequest extends FormRequest
     {
         return [
             'message' => ['required', 'string', 'max:10000'],
-            'model' => ['nullable', 'string', Rule::enum(ModelName::class)],
+            'ai_model_id' => ['nullable', 'integer', 'exists:ai_models,id'],
         ];
     }
 }

@@ -28,6 +28,7 @@ class AiModelFactory extends Factory
             'speed_tier' => fake()->randomElement(['fast', 'medium', 'slow']),
             'cost_tier' => fake()->randomElement(['low', 'medium', 'high']),
             'enabled' => true,
+            'is_available' => true,
         ];
     }
 
