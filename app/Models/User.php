@@ -22,6 +22,14 @@ class User extends Authenticatable
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Agent, $this>
+     */
+    public function agents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Agent::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany<UserApiCredential, $this>
      */
     public function apiCredentials(): \Illuminate\Database\Eloquent\Relations\HasMany

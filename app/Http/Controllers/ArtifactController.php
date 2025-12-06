@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Artifact;
 use App\Models\Chat;
 use App\Services\SvgSanitizer;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -14,12 +15,14 @@ use Illuminate\View\View;
 
 class ArtifactController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Get all artifacts for a chat.
      */
     public function index(Request $request, Chat $chat): JsonResponse
     {
-        abort_unless($chat->user_id === $request->user()->id, 403);
+        $this->authorize('view', $chat);
 
         $artifacts = Artifact::query()
             ->whereIn('message_id', $chat->messages()->pluck('id'))
@@ -36,7 +39,7 @@ class ArtifactController extends Controller
     {
         $chat = $artifact->message?->chat;
         abort_if($chat === null, 404);
-        abort_unless($chat->user_id === $request->user()?->id, 403);
+        $this->authorize('view', $chat);
 
         return response()->json($artifact);
     }
@@ -48,7 +51,7 @@ class ArtifactController extends Controller
     {
         $chat = $artifact->message?->chat;
         abort_if($chat === null, 404);
-        abort_unless($chat->user_id === $request->user()?->id, 403);
+        $this->authorize('view', $chat);
 
         $view = $this->getRendererView($artifact);
         $html = $view->render();

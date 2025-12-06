@@ -6,6 +6,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Agent extends Model
 {
@@ -26,4 +29,48 @@ class Agent extends Model
         'capabilities',
         'is_active',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'tools' => 'array',
+            'capabilities' => 'array',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<AiModel, $this>
+     */
+    public function defaultModel(): BelongsTo
+    {
+        return $this->belongsTo(AiModel::class, 'default_model_id');
+    }
+
+    /**
+     * @return BelongsToMany<AiModel, $this>
+     */
+    public function models(): BelongsToMany
+    {
+        return $this->belongsToMany(AiModel::class, 'agent_model');
+    }
+
+    /**
+     * @return HasMany<Chat, $this>
+     */
+    public function chats(): HasMany
+    {
+        return $this->hasMany(Chat::class);
+    }
 }

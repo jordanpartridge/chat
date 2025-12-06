@@ -24,6 +24,21 @@ use Throwable;
 class ChatStreamService
 {
     /**
+     * Number of messages after which to generate the first title.
+     */
+    private const INITIAL_TITLE_GENERATION_THRESHOLD = 2;
+
+    /**
+     * Generate a new title every N messages after the initial generation.
+     */
+    private const TITLE_REGENERATION_INTERVAL = 10;
+
+    /**
+     * Maximum number of tool execution steps.
+     */
+    private const MAX_TOOL_STEPS = 2;
+
+    /**
      * @var array<string>
      */
     private const ARTIFACT_TRIGGERS = [
@@ -82,7 +97,7 @@ class ChatStreamService
                 ->withMessages($messages);
 
             if (count($tools) > 0) {
-                $prismBuilder = $prismBuilder->withTools($tools)->withMaxSteps(2);
+                $prismBuilder = $prismBuilder->withTools($tools)->withMaxSteps(self::MAX_TOOL_STEPS);
             }
 
             yield from $this->processStream($prismBuilder->asStream());
@@ -267,7 +282,10 @@ class ChatStreamService
             $chat->touch();
 
             $messageCount = $chat->messages()->count();
-            if ($messageCount === 2 || $messageCount % 10 === 0) {
+            $shouldGenerateTitle = $messageCount === self::INITIAL_TITLE_GENERATION_THRESHOLD
+                || $messageCount % self::TITLE_REGENERATION_INTERVAL === 0;
+
+            if ($shouldGenerateTitle) {
                 GenerateChatTitle::dispatchSync($chat);
             }
         } else {

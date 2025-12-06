@@ -39,4 +39,9 @@ return [
         'api_key' => env('TAVILY_API_KEY'),
     ],
 
+    'ollama' => [
+        'base_url' => env('OLLAMA_BASE_URL', 'http://localhost:11434'),
+        'timeout' => env('OLLAMA_TIMEOUT', 5),
+    ],
+
 ];
