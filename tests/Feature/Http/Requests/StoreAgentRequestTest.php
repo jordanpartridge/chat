@@ -7,13 +7,20 @@ use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 describe('authorization', function () {
-    it('authorizes all authenticated users', function () {
+    it('authorizes authenticated users', function () {
         $user = User::factory()->create();
 
+        $this->actingAs($user);
+
         $request = new StoreAgentRequest;
-        $request->setUserResolver(fn () => $user);
 
         expect($request->authorize())->toBeTrue();
+    });
+
+    it('denies unauthenticated users', function () {
+        $request = new StoreAgentRequest;
+
+        expect($request->authorize())->toBeFalse();
     });
 });
 

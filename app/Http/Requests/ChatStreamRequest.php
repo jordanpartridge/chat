@@ -14,6 +14,11 @@ class ChatStreamRequest extends FormRequest
     }
 
     /**
+     * Get the validation rules that apply to the request.
+     *
+     * Note: ai_model_id is nullable here because existing chats have a default model.
+     * The controller falls back to the chat's ai_model_id when not provided.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

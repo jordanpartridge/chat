@@ -55,6 +55,15 @@ describe('scopes', function () {
         expect(AiModel::enabled()->count())->toBe(3);
     });
 
+    it('filters available models (enabled and is_available)', function () {
+        AiModel::factory()->count(2)->create(['enabled' => true, 'is_available' => true]);
+        AiModel::factory()->count(1)->create(['enabled' => true, 'is_available' => false]);
+        AiModel::factory()->count(1)->create(['enabled' => false, 'is_available' => true]);
+        AiModel::factory()->count(1)->create(['enabled' => false, 'is_available' => false]);
+
+        expect(AiModel::available()->count())->toBe(2);
+    });
+
     it('filters by provider', function () {
         AiModel::factory()->count(2)->create(['provider' => 'ollama']);
         AiModel::factory()->count(3)->create(['provider' => 'groq']);

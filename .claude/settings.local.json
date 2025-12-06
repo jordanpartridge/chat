@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(php artisan make:model:*)",
-      "Bash(gh issue create:*)"
+      "Bash(gh issue create:*)",
+      "Bash(find:*)",
+      "Bash(git checkout:*)",
+      "Bash(php artisan make:policy:*)",
+      "Bash(/usr/local/bin/php:*)",
+      "Bash(/opt/homebrew/bin/php:*)",
+      "Bash(git add:*)"
     ]
   },
   "enabledMcpjsonServers": [

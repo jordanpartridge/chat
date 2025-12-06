@@ -8,18 +8,21 @@ use App\Http\Requests\ChatStreamRequest;
 use App\Models\AiModel;
 use App\Models\Chat;
 use App\Services\ChatStreamService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ChatStreamController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly ChatStreamService $streamService
     ) {}
 
     public function __invoke(ChatStreamRequest $request, Chat $chat): StreamedResponse
     {
-        abort_unless($chat->user_id === $request->user()->id, 403);
+        $this->authorize('stream', $chat);
 
         $userMessage = $request->string('message')->trim()->value();
 

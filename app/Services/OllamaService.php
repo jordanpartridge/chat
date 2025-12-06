@@ -9,9 +9,15 @@ use Illuminate\Support\Facades\Log;
 
 class OllamaService
 {
-    public function __construct(
-        private readonly string $baseUrl = 'http://localhost:11434'
-    ) {}
+    private readonly string $baseUrl;
+
+    private readonly int $timeout;
+
+    public function __construct(?string $baseUrl = null, ?int $timeout = null)
+    {
+        $this->baseUrl = $baseUrl ?? config('services.ollama.base_url', 'http://localhost:11434');
+        $this->timeout = $timeout ?? (int) config('services.ollama.timeout', 5);
+    }
 
     /**
      * Get list of available models from Ollama.
@@ -21,7 +27,7 @@ class OllamaService
     public function getAvailableModels(): array
     {
         try {
-            $response = Http::timeout(5)->get("{$this->baseUrl}/api/tags");
+            $response = Http::timeout($this->timeout)->get("{$this->baseUrl}/api/tags");
 
             if ($response->successful()) {
                 return $response->json('models', []);

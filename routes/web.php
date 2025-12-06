@@ -30,7 +30,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('chats/{chat}', [ChatController::class, 'show'])->name('chats.show');
     Route::patch('chats/{chat}', [ChatController::class, 'update'])->name('chats.update');
     Route::delete('chats/{chat}', [ChatController::class, 'destroy'])->name('chats.destroy');
-    Route::post('chats/{chat}/stream', ChatStreamController::class)->name('chats.stream');
+    Route::post('chats/{chat}/stream', ChatStreamController::class)
+        ->middleware('throttle:30,1')
+        ->name('chats.stream');
 
     Route::get('chats/{chat}/artifacts', [ArtifactController::class, 'index'])->name('artifacts.index');
     Route::get('artifacts/{artifact}', [ArtifactController::class, 'show'])->name('artifacts.show');
