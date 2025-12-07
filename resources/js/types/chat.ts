@@ -54,7 +54,8 @@ export interface Chat {
     id: string;
     user_id: number;
     title: string;
-    model: string;
+    ai_model_id: number;
+    ai_model?: Model;
     created_at: string;
     updated_at: string;
     messages?: Message[];
