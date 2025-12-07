@@ -3,7 +3,7 @@
 use App\Http\Controllers\ArtifactController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatStreamController;
-use App\Services\ModelSyncService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -14,13 +14,13 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('dashboard', function (ModelSyncService $modelSyncService) {
-    $recentChats = auth()->user()->chats()->orderByDesc('updated_at')->limit(5)->get();
-    $models = $modelSyncService->syncAndGetAvailable();
+Route::get('dashboard', function (Request $request) {
+    $user = $request->user();
+    $recentChats = $user->chats()->orderByDesc('updated_at')->limit(5)->get();
 
     return Inertia::render('Dashboard', [
         'recentChats' => $recentChats,
-        'models' => $models,
+        'models' => $user->availableModels(),
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -38,3 +38,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+// Dev-only auto-login route
+if (app()->environment('local')) {
+    Route::get('dev/login/{user?}', function (?App\Models\User $user = null) {
+        $user ??= App\Models\User::first() ?? App\Models\User::factory()->create([
+            'name' => 'Dev User',
+            'email' => 'dev@local.test',
+        ]);
+        auth()->login($user);
+
+        return redirect()->route('dashboard');
+    })->name('dev.login');
+}
