@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import { Button } from '@/components/ui/button';
@@ -30,12 +30,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import InputError from '@/components/InputError.vue';
 import { Form } from '@inertiajs/vue3';
-import { Trash2, Plus, Eye, EyeOff } from 'lucide-vue-next';
+import { Trash2, Plus, Eye, EyeOff, Loader2, CheckCircle, XCircle } from 'lucide-vue-next';
 
-// Import Wayfinder actions (once backend is ready)
-// import { store, destroy, toggle } from '@/actions/App/Http/Controllers/Settings/ProviderCredentialController'
+interface ProviderModel {
+    id: string;
+    name: string;
+    description: string;
+}
 
 interface Credential {
     id: number;
@@ -61,6 +65,11 @@ const showApiKey = ref(false);
 const selectedProvider = ref('');
 const apiKey = ref('');
 
+// Validation state
+const isValidating = ref(false);
+const validationResult = ref<{ valid: boolean; models: ProviderModel[]; error: string | null } | null>(null);
+const selectedModels = ref<string[]>([]);
+
 const providerNames: Record<string, string> = {
     openai: 'OpenAI',
     anthropic: 'Anthropic',
@@ -85,10 +94,96 @@ const resetForm = () => {
     apiKey.value = '';
     showApiKey.value = false;
     showAddDialog.value = false;
+    validationResult.value = null;
+    selectedModels.value = [];
+    isValidating.value = false;
 };
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
+};
+
+// Debounced validation
+let validationTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const validateApiKey = async () => {
+    if (!selectedProvider.value || apiKey.value.length < 10) {
+        validationResult.value = null;
+        return;
+    }
+
+    isValidating.value = true;
+    validationResult.value = null;
+
+    try {
+        const response = await fetch('/settings/providers/validate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            body: JSON.stringify({
+                provider: selectedProvider.value,
+                api_key: apiKey.value,
+            }),
+        });
+
+        const result = await response.json();
+        validationResult.value = result;
+
+        // Auto-select all models by default
+        if (result.valid && result.models) {
+            selectedModels.value = result.models.map((m: ProviderModel) => m.id);
+        }
+    } catch {
+        validationResult.value = {
+            valid: false,
+            models: [],
+            error: 'Failed to validate API key',
+        };
+    } finally {
+        isValidating.value = false;
+    }
+};
+
+// Watch for API key changes and debounce validation
+watch([apiKey, selectedProvider], () => {
+    if (validationTimeout) {
+        clearTimeout(validationTimeout);
+    }
+
+    validationResult.value = null;
+
+    if (apiKey.value.length >= 10 && selectedProvider.value) {
+        validationTimeout = setTimeout(validateApiKey, 500);
+    }
+});
+
+const toggleModel = (modelId: string) => {
+    const index = selectedModels.value.indexOf(modelId);
+    if (index === -1) {
+        selectedModels.value.push(modelId);
+    } else {
+        selectedModels.value.splice(index, 1);
+    }
+};
+
+const isModelSelected = (modelId: string) => selectedModels.value.includes(modelId);
+
+const canSubmit = computed(() => {
+    return validationResult.value?.valid && selectedModels.value.length > 0;
+});
+
+const submitForm = () => {
+    if (!canSubmit.value) return;
+
+    router.post('/settings/providers', {
+        provider: selectedProvider.value,
+        api_key: apiKey.value,
+        models: selectedModels.value,
+    }, {
+        onSuccess: () => resetForm(),
+    });
 };
 </script>
 
@@ -215,35 +310,28 @@ const formatDate = (dateString: string) => {
             </div>
 
             <!-- Add Provider Button -->
-            <Dialog v-model:open="showAddDialog">
+            <Dialog v-model:open="showAddDialog" @update:open="(open) => !open && resetForm()">
                 <DialogTrigger as-child>
                     <Button v-if="unconfiguredProviders.length > 0">
                         <Plus class="h-4 w-4 mr-2" />
                         Add Provider
                     </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent class="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Add API Provider</DialogTitle>
                         <DialogDescription>
-                            Enter your API key for a provider. Keys are
-                            encrypted before storage.
+                            Enter your API key. We'll validate it and show available models.
                         </DialogDescription>
                     </DialogHeader>
-                    <Form
-                        action="/settings/providers"
-                        method="post"
-                        class="space-y-4"
-                        @success="resetForm"
-                        #default="{ errors, processing }"
-                    >
+
+                    <div class="space-y-4">
+                        <!-- Provider Selection -->
                         <div class="space-y-2">
                             <Label for="provider">Provider</Label>
-                            <Select v-model="selectedProvider" name="provider">
+                            <Select v-model="selectedProvider">
                                 <SelectTrigger>
-                                    <SelectValue
-                                        placeholder="Select a provider"
-                                    />
+                                    <SelectValue placeholder="Select a provider" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem
@@ -251,46 +339,97 @@ const formatDate = (dateString: string) => {
                                         :key="provider.id"
                                         :value="provider.id"
                                     >
-                                        {{ provider.name }} -
-                                        {{ provider.description }}
+                                        {{ provider.name }}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="errors.provider" />
                         </div>
+
+                        <!-- API Key Input -->
                         <div class="space-y-2">
                             <Label for="api_key">API Key</Label>
                             <div class="relative">
                                 <Input
                                     id="api_key"
-                                    name="api_key"
                                     v-model="apiKey"
                                     :type="showApiKey ? 'text' : 'password'"
                                     placeholder="sk-..."
-                                    class="pr-10"
+                                    class="pr-20"
+                                    :disabled="!selectedProvider"
                                 />
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    class="absolute right-0 top-0 h-full px-3"
-                                    @click="showApiKey = !showApiKey"
-                                >
-                                    <Eye
-                                        v-if="!showApiKey"
-                                        class="h-4 w-4"
-                                    />
-                                    <EyeOff v-else class="h-4 w-4" />
-                                </Button>
+                                <div class="absolute right-0 top-0 h-full flex items-center pr-2 gap-1">
+                                    <!-- Validation Status -->
+                                    <div v-if="isValidating" class="text-muted-foreground">
+                                        <Loader2 class="h-4 w-4 animate-spin" />
+                                    </div>
+                                    <div v-else-if="validationResult?.valid" class="text-green-500">
+                                        <CheckCircle class="h-4 w-4" />
+                                    </div>
+                                    <div v-else-if="validationResult && !validationResult.valid" class="text-red-500">
+                                        <XCircle class="h-4 w-4" />
+                                    </div>
+
+                                    <!-- Toggle visibility -->
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        class="h-8 w-8 p-0"
+                                        @click="showApiKey = !showApiKey"
+                                    >
+                                        <Eye v-if="!showApiKey" class="h-4 w-4" />
+                                        <EyeOff v-else class="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
-                            <InputError :message="errors.api_key" />
+                            <p v-if="validationResult?.error" class="text-sm text-red-500">
+                                {{ validationResult.error }}
+                            </p>
+                            <p v-else-if="apiKey.length > 0 && apiKey.length < 10" class="text-sm text-muted-foreground">
+                                Keep typing...
+                            </p>
                         </div>
-                        <DialogFooter>
-                            <Button type="submit" :disabled="processing">
-                                {{ processing ? 'Adding...' : 'Add Provider' }}
-                            </Button>
-                        </DialogFooter>
-                    </Form>
+
+                        <!-- Model Selection -->
+                        <div v-if="validationResult?.valid && validationResult.models.length > 0" class="space-y-3">
+                            <Label>Select Models to Enable</Label>
+                            <div class="rounded-lg border p-3 space-y-2 max-h-48 overflow-y-auto">
+                                <div
+                                    v-for="model in validationResult.models"
+                                    :key="model.id"
+                                    class="flex items-start gap-3 p-2 rounded hover:bg-muted/50 cursor-pointer"
+                                    @click="toggleModel(model.id)"
+                                >
+                                    <Checkbox
+                                        :id="model.id"
+                                        :checked="isModelSelected(model.id)"
+                                        @update:checked="toggleModel(model.id)"
+                                    />
+                                    <div class="flex-1 min-w-0">
+                                        <label :for="model.id" class="text-sm font-medium cursor-pointer">
+                                            {{ model.name }}
+                                        </label>
+                                        <p class="text-xs text-muted-foreground">
+                                            {{ model.description }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-muted-foreground">
+                                {{ selectedModels.length }} of {{ validationResult.models.length }} models selected
+                            </p>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            :disabled="!canSubmit"
+                            @click="submitForm"
+                        >
+                            Add Provider
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>
