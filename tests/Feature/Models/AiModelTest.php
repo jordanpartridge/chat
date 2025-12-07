@@ -2,6 +2,8 @@
 
 use App\Models\Agent;
 use App\Models\AiModel;
+use App\Models\User;
+use App\Models\UserApiCredential;
 
 describe('factory', function () {
     it('creates a valid model', function () {
@@ -11,9 +13,10 @@ describe('factory', function () {
     });
 
     it('creates model with specified attributes', function () {
-        $model = AiModel::factory()->create([
+        $credential = UserApiCredential::factory()->create(['provider' => 'openai']);
+
+        $model = AiModel::factory()->forCredential($credential)->create([
             'name' => 'GPT-4 Turbo',
-            'provider' => 'openai',
             'model_id' => 'gpt-4-turbo',
             'context_window' => 128000,
             'supports_tools' => true,
@@ -34,16 +37,20 @@ describe('factory', function () {
             ->and($model->enabled)->toBeTrue();
     });
 
-    it('supports multiple providers', function () {
-        AiModel::factory()->create(['provider' => 'ollama', 'model_id' => 'llama3:8b']);
-        AiModel::factory()->create(['provider' => 'groq', 'model_id' => 'llama-3.1-70b']);
-        AiModel::factory()->create(['provider' => 'openai', 'model_id' => 'gpt-4']);
-        AiModel::factory()->create(['provider' => 'anthropic', 'model_id' => 'claude-3-opus']);
+    it('supports multiple providers via credentials', function () {
+        $user = User::factory()->create();
 
-        expect(AiModel::where('provider', 'ollama')->count())->toBe(1)
-            ->and(AiModel::where('provider', 'groq')->count())->toBe(1)
-            ->and(AiModel::where('provider', 'openai')->count())->toBe(1)
-            ->and(AiModel::where('provider', 'anthropic')->count())->toBe(1);
+        $ollamaCredential = UserApiCredential::factory()->for($user)->create(['provider' => 'ollama']);
+        $groqCredential = UserApiCredential::factory()->for($user)->create(['provider' => 'groq']);
+        $openaiCredential = UserApiCredential::factory()->for($user)->create(['provider' => 'openai']);
+        $anthropicCredential = UserApiCredential::factory()->for($user)->create(['provider' => 'anthropic']);
+
+        AiModel::factory()->forCredential($ollamaCredential)->create(['model_id' => 'llama3:8b']);
+        AiModel::factory()->forCredential($groqCredential)->create(['model_id' => 'llama-3.1-70b']);
+        AiModel::factory()->forCredential($openaiCredential)->create(['model_id' => 'gpt-4']);
+        AiModel::factory()->forCredential($anthropicCredential)->create(['model_id' => 'claude-3-opus']);
+
+        expect(AiModel::count())->toBe(4);
     });
 });
 
@@ -53,14 +60,6 @@ describe('scopes', function () {
         AiModel::factory()->count(2)->create(['enabled' => false]);
 
         expect(AiModel::enabled()->count())->toBe(3);
-    });
-
-    it('filters by provider', function () {
-        AiModel::factory()->count(2)->create(['provider' => 'ollama']);
-        AiModel::factory()->count(3)->create(['provider' => 'groq']);
-
-        expect(AiModel::byProvider('ollama')->count())->toBe(2)
-            ->and(AiModel::byProvider('groq')->count())->toBe(3);
     });
 
     it('filters models supporting tools', function () {
@@ -88,6 +87,14 @@ describe('scopes', function () {
 });
 
 describe('relationships', function () {
+    it('belongs to a credential', function () {
+        $credential = UserApiCredential::factory()->create(['provider' => 'anthropic']);
+        $model = AiModel::factory()->forCredential($credential)->create();
+
+        expect($model->credential)->toBeInstanceOf(UserApiCredential::class)
+            ->and($model->credential->id)->toBe($credential->id);
+    });
+
     it('belongs to many agents', function () {
         $model = AiModel::factory()->create();
         $agents = Agent::factory()->count(3)->create();
@@ -97,17 +104,24 @@ describe('relationships', function () {
         expect($model->agents)->toHaveCount(3)
             ->and($model->agents->first())->toBeInstanceOf(Agent::class);
     });
+
+    it('gets provider from credential', function () {
+        $credential = UserApiCredential::factory()->create(['provider' => 'groq']);
+        $model = AiModel::factory()->forCredential($credential)->create();
+
+        expect($model->provider)->toBe('groq');
+    });
 });
 
 describe('constraints', function () {
-    it('enforces unique provider and model_id combination', function () {
-        AiModel::factory()->create([
-            'provider' => 'openai',
+    it('enforces unique credential and model_id combination', function () {
+        $credential = UserApiCredential::factory()->create();
+
+        AiModel::factory()->forCredential($credential)->create([
             'model_id' => 'gpt-4',
         ]);
 
-        expect(fn () => AiModel::factory()->create([
-            'provider' => 'openai',
+        expect(fn () => AiModel::factory()->forCredential($credential)->create([
             'model_id' => 'gpt-4',
         ]))->toThrow(\Illuminate\Database\QueryException::class);
     });

@@ -4,6 +4,7 @@ use App\Jobs\GenerateChatTitle;
 use App\Models\AiModel;
 use App\Models\Chat;
 use App\Models\Message;
+use App\Models\UserApiCredential;
 use Illuminate\Support\Facades\Log;
 use Prism\Prism\Enums\FinishReason;
 use Prism\Prism\Facades\Prism;
@@ -52,8 +53,8 @@ describe('title generation', function () {
     it('uses the chat model for title generation', function () {
         $fake = Prism::fake([createTitleResponse('Test Title')]);
 
-        $model = AiModel::factory()->create([
-            'provider' => 'ollama',
+        $credential = UserApiCredential::factory()->create(['provider' => 'ollama']);
+        $model = AiModel::factory()->forCredential($credential)->create([
             'model_id' => 'mistral',
         ]);
         $chat = Chat::factory()->create([
