@@ -71,8 +71,13 @@ class ChatStreamService
                 : [];
             $messages = $this->buildConversationHistory($chat);
 
+            // Get API key from the model's credential
+            $apiKey = $model->credential?->api_key;
+
             $prismBuilder = Prism::text()
-                ->using($model->getPrismProvider(), $model->model_id)
+                ->using($model->getPrismProvider(), $model->model_id, [
+                    'api_key' => $apiKey,
+                ])
                 ->withSystemPrompt($this->buildSystemPrompt(count($tools) > 0))
                 ->withMessages($messages);
 
