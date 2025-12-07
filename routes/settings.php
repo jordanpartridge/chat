@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ProviderValidationController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\ProviderCredentialController;
@@ -29,7 +30,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/providers', [ProviderCredentialController::class, 'index'])->name('provider-credentials.index');
     Route::post('settings/providers', [ProviderCredentialController::class, 'store'])->name('provider-credentials.store');
+    Route::post('settings/providers/validate', [ProviderValidationController::class, 'validate'])->name('provider-credentials.validate');
     Route::patch('settings/providers/{credential}', [ProviderCredentialController::class, 'update'])->name('provider-credentials.update');
     Route::delete('settings/providers/{credential}', [ProviderCredentialController::class, 'destroy'])->name('provider-credentials.destroy');
     Route::patch('settings/providers/{credential}/toggle', [ProviderCredentialController::class, 'toggle'])->name('provider-credentials.toggle');
+    Route::patch('settings/providers/{credential}/models/{model}/toggle', [ProviderCredentialController::class, 'toggleModel'])->name('provider-credentials.toggle-model');
 });

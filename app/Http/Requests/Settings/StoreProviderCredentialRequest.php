@@ -24,6 +24,19 @@ class StoreProviderCredentialRequest extends FormRequest
         return [
             'provider' => ['required', 'string', 'in:openai,anthropic,xai,gemini,mistral,groq'],
             'api_key' => ['required', 'string', 'min:10'],
+            'models' => ['required', 'array', 'min:1'],
+            'models.*' => ['required', 'string'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'models.required' => 'Please select at least one model.',
+            'models.min' => 'Please select at least one model.',
         ];
     }
 }
