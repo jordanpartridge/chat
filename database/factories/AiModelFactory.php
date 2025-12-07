@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\AiModel;
+use App\Models\UserApiCredential;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -15,12 +16,9 @@ class AiModelFactory extends Factory
      */
     public function definition(): array
     {
-        $providers = ['ollama', 'groq', 'openai', 'anthropic'];
-        $provider = fake()->randomElement($providers);
-
         return [
+            'user_api_credential_id' => UserApiCredential::factory(),
             'name' => fake()->words(2, true),
-            'provider' => $provider,
             'model_id' => fake()->slug(2),
             'context_window' => fake()->randomElement([4096, 8192, 16384, 32768, 128000]),
             'supports_tools' => fake()->boolean(),
@@ -28,7 +26,6 @@ class AiModelFactory extends Factory
             'speed_tier' => fake()->randomElement(['fast', 'medium', 'slow']),
             'cost_tier' => fake()->randomElement(['low', 'medium', 'high']),
             'enabled' => true,
-            'is_available' => true,
         ];
     }
 
@@ -39,33 +36,10 @@ class AiModelFactory extends Factory
         ]);
     }
 
-    public function ollama(): static
+    public function forCredential(UserApiCredential $credential): static
     {
         return $this->state(fn (array $attributes) => [
-            'provider' => 'ollama',
-            'cost_tier' => 'low',
-        ]);
-    }
-
-    public function groq(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'provider' => 'groq',
-            'speed_tier' => 'fast',
-        ]);
-    }
-
-    public function openai(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'provider' => 'openai',
-        ]);
-    }
-
-    public function anthropic(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'provider' => 'anthropic',
+            'user_api_credential_id' => $credential->id,
         ]);
     }
 }

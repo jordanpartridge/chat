@@ -42,6 +42,23 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all available AI models for this user.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, AiModel>
+     */
+    public function availableModels(): \Illuminate\Database\Eloquent\Collection
+    {
+        return AiModel::query()
+            ->whereHas('credential', fn ($q) => $q
+                ->where('user_id', $this->id)
+                ->where('is_enabled', true)
+            )
+            ->where('enabled', true)
+            ->with('credential:id,provider')
+            ->get();
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
