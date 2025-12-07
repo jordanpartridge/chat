@@ -62,8 +62,12 @@ export interface Chat {
 }
 
 export interface Model {
-    id: string;
+    id: number;
     name: string;
-    description: string;
-    provider: string;
+    model_id: string;
+    description: string | null;
+    provider?: string;
+    supports_tools?: boolean;
+    supports_vision?: boolean;
+    enabled?: boolean;
 }

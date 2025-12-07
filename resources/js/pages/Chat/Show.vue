@@ -26,7 +26,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 
 const messages = ref<Message[]>(props.chat.messages ?? []);
 const selectedArtifact = ref<Artifact | null>(null);
-const selectedModel = ref(props.chat.model);
+const selectedModel = ref(props.chat.ai_model_id ?? props.models[0]?.id);
 
 const handleArtifactCreated = (artifact: Artifact) => {
     selectedArtifact.value = artifact;
@@ -34,9 +34,9 @@ const handleArtifactCreated = (artifact: Artifact) => {
 
 // Update model when changed
 watch(selectedModel, (newModel) => {
-    if (newModel !== props.chat.model) {
+    if (newModel !== props.chat.ai_model_id) {
         router.patch(update.url(props.chat.id), {
-            model: newModel,
+            ai_model_id: newModel,
         }, {
             preserveScroll: true,
         });
@@ -60,7 +60,7 @@ const handleSubmit = async (message: string) => {
 
     await send({
         message,
-        model: selectedModel.value,
+        ai_model_id: selectedModel.value,
     });
 };
 
@@ -77,7 +77,7 @@ const currentModel = computed(() => {
 });
 
 const supportsTools = computed(() => {
-    return currentModel.value?.supportsTools ?? false;
+    return currentModel.value?.supports_tools ?? false;
 });
 </script>
 
@@ -125,7 +125,7 @@ const supportsTools = computed(() => {
                                     >
                                         <span class="flex items-center gap-2">
                                             {{ model.name }}
-                                            <Zap v-if="model.supportsTools" class="h-3 w-3 text-indigo-400" />
+                                            <Zap v-if="model.supports_tools" class="h-3 w-3 text-indigo-400" />
                                         </span>
                                     </SelectItem>
                                 </SelectContent>

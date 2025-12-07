@@ -24,6 +24,30 @@ describe('index', function () {
         );
     });
 
+    it('returns models with correct properties', function () {
+        $user = User::factory()->create();
+        $credential = \App\Models\UserApiCredential::factory()->for($user)->create();
+        $model = AiModel::factory()->for($credential, 'credential')->create([
+            'name' => 'Test Model',
+            'model_id' => 'test-model-id',
+            'supports_tools' => true,
+            'supports_vision' => false,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('chats.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Chat/Index')
+            ->has('models', 1)
+            ->where('models.0.id', $model->id)
+            ->where('models.0.name', 'Test Model')
+            ->where('models.0.model_id', 'test-model-id')
+            ->where('models.0.supports_tools', true)
+            ->where('models.0.supports_vision', false)
+        );
+    });
+
     it('orders chats by updated_at descending', function () {
         $user = User::factory()->create();
         $oldChat = Chat::factory()->for($user)->create(['updated_at' => now()->subDay()]);
