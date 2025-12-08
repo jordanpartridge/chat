@@ -18,7 +18,7 @@ describe('models', function () {
             ]),
         ]);
 
-        $service = new OllamaService();
+        $service = new OllamaService;
         $models = $service->getAvailableModels();
 
         expect($models)->toHaveCount(2)
@@ -36,7 +36,7 @@ describe('models', function () {
             ]),
         ]);
 
-        $service = new OllamaService();
+        $service = new OllamaService;
         $names = $service->getInstalledModelNames();
 
         expect($names)->toBe(['llama3.2', 'phi3']);
@@ -51,7 +51,7 @@ describe('models', function () {
             ]),
         ]);
 
-        $service = new OllamaService();
+        $service = new OllamaService;
 
         expect($service->isModelAvailable('llama3.2'))->toBeTrue()
             ->and($service->isModelAvailable('llama3.2:latest'))->toBeTrue()
@@ -65,7 +65,7 @@ describe('error handling', function () {
             'localhost:11434/api/tags' => Http::response([], 500),
         ]);
 
-        $service = new OllamaService();
+        $service = new OllamaService;
         $models = $service->getAvailableModels();
 
         expect($models)->toBe([]);
@@ -78,7 +78,7 @@ describe('error handling', function () {
             },
         ]);
 
-        $service = new OllamaService();
+        $service = new OllamaService;
         $models = $service->getAvailableModels();
 
         expect($models)->toBe([]);
