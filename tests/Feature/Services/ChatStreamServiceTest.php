@@ -3,6 +3,7 @@
 use App\Models\AiModel;
 use App\Models\Chat;
 use App\Models\User;
+use App\Models\UserApiCredential;
 use App\Services\ChatStreamService;
 use Prism\Prism\Enums\FinishReason;
 use Prism\Prism\Facades\Prism;
@@ -26,15 +27,21 @@ function createStreamTextResponse(string $text): TextResponse
 
 beforeEach(function () {
     $this->user = User::factory()->create();
-    $this->ollamaModel = AiModel::factory()->create([
-        'name' => 'Llama 3.2',
+
+    $ollamaCredential = UserApiCredential::factory()->for($this->user)->create([
         'provider' => 'ollama',
+    ]);
+    $groqCredential = UserApiCredential::factory()->for($this->user)->create([
+        'provider' => 'groq',
+    ]);
+
+    $this->ollamaModel = AiModel::factory()->forCredential($ollamaCredential)->create([
+        'name' => 'Llama 3.2',
         'model_id' => 'llama3.2',
         'supports_tools' => false,
     ]);
-    $this->groqModel = AiModel::factory()->create([
+    $this->groqModel = AiModel::factory()->forCredential($groqCredential)->create([
         'name' => 'Groq Llama 3.3 70B',
-        'provider' => 'groq',
         'model_id' => 'llama-3.3-70b-versatile',
         'supports_tools' => true,
     ]);

@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreChatRequest;
 use App\Http\Requests\UpdateChatRequest;
 use App\Models\Chat;
-use App\Services\ModelSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,17 +14,13 @@ use Inertia\Response;
 
 class ChatController extends Controller
 {
-    public function __construct(
-        private readonly ModelSyncService $modelSyncService
-    ) {}
-
     public function index(Request $request): Response
     {
-        $chats = $request->user()->chats()->orderByDesc('updated_at')->get();
+        $chats = $request->user()->chats()->with('aiModel')->orderByDesc('updated_at')->get();
 
         return Inertia::render('Chat/Index', [
             'chats' => $chats,
-            'models' => $this->modelSyncService->syncAndGetAvailable(),
+            'models' => $request->user()->availableModels(),
         ]);
     }
 
@@ -43,12 +38,12 @@ class ChatController extends Controller
     {
         abort_unless($chat->user_id === $request->user()->id, 403);
 
-        $chats = $request->user()->chats()->orderByDesc('updated_at')->get();
+        $chats = $request->user()->chats()->with('aiModel')->orderByDesc('updated_at')->get();
 
         return Inertia::render('Chat/Show', [
-            'chat' => $chat->load('messages'),
+            'chat' => $chat->load(['messages', 'aiModel']),
             'chats' => $chats,
-            'models' => $this->modelSyncService->syncAndGetAvailable(),
+            'models' => $request->user()->availableModels(),
         ]);
     }
 

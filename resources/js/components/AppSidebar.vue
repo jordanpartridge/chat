@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, router } from '@inertiajs/vue3';
-import { BookOpen, Folder, Plus, MessageCircle, Sparkles } from 'lucide-vue-next';
+import { Settings, Plus, MessageCircle, Sparkles } from 'lucide-vue-next';
 import { index, store, show } from '@/actions/App/Http/Controllers/ChatController';
 import type { Chat } from '@/types/chat';
 
@@ -26,26 +26,22 @@ const props = defineProps<{
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
+        title: 'Settings',
+        href: '/settings/providers',
+        icon: Settings,
+        internal: true,
     },
 ];
 
 const startNewChat = () => {
     router.post(store.url(), {
         message: 'New conversation',
-        model: props.chats?.[0]?.model ?? 'llama3.2',
+        ai_model_id: props.chats?.[0]?.ai_model_id,
     });
 };
 
-const isGroqModel = (modelId: string) => {
-    return modelId.includes('groq') || modelId.includes('llama-3.') || modelId.includes('meta-llama');
+const isGroqModel = (chat: typeof props.chats extends (infer T)[] | undefined ? T : never) => {
+    return chat.ai_model?.provider === 'groq';
 };
 </script>
 
@@ -98,7 +94,7 @@ const isGroqModel = (modelId: string) => {
                                 <Link :href="show.url(chat.id)" class="flex items-center gap-3 px-3 py-2">
                                     <div
                                         class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
-                                        :class="isGroqModel(chat.model) ? 'bg-indigo-500/30' : 'bg-gray-700'"
+                                        :class="isGroqModel(chat) ? 'bg-indigo-500/30' : 'bg-gray-700'"
                                     >
                                         <MessageCircle class="h-3.5 w-3.5" />
                                     </div>

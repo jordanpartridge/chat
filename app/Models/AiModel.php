@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Prism\Prism\Enums\Provider;
 
@@ -15,16 +16,16 @@ class AiModel extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_api_credential_id',
         'name',
-        'provider',
         'model_id',
+        'description',
         'context_window',
         'supports_tools',
         'supports_vision',
         'speed_tier',
         'cost_tier',
         'enabled',
-        'is_available',
     ];
 
     protected function casts(): array
@@ -34,8 +35,15 @@ class AiModel extends Model
             'supports_tools' => 'boolean',
             'supports_vision' => 'boolean',
             'enabled' => 'boolean',
-            'is_available' => 'boolean',
         ];
+    }
+
+    /**
+     * @return BelongsTo<UserApiCredential, $this>
+     */
+    public function credential(): BelongsTo
+    {
+        return $this->belongsTo(UserApiCredential::class, 'user_api_credential_id');
     }
 
     /**
@@ -53,15 +61,6 @@ class AiModel extends Model
     public function scopeEnabled(Builder $query): Builder
     {
         return $query->where('enabled', true);
-    }
-
-    /**
-     * @param  Builder<AiModel>  $query
-     * @return Builder<AiModel>
-     */
-    public function scopeByProvider(Builder $query, string $provider): Builder
-    {
-        return $query->where('provider', $provider);
     }
 
     /**
@@ -92,6 +91,15 @@ class AiModel extends Model
     }
 
     /**
+     * Get the provider from the credential, with fallback to legacy provider column.
+     */
+    public function getProviderAttribute(): ?string
+    {
+        return $this->credential?->provider
+            ?? ($this->attributes['provider'] ?? null);
+    }
+
+    /**
      * Get the Prism Provider enum for this model.
      */
     public function getPrismProvider(): Provider
@@ -101,6 +109,9 @@ class AiModel extends Model
             'groq' => Provider::Groq,
             'openai' => Provider::OpenAI,
             'anthropic' => Provider::Anthropic,
+            'xai' => Provider::XAI,
+            'gemini' => Provider::Gemini,
+            'mistral' => Provider::Mistral,
             default => Provider::Ollama,
         };
     }

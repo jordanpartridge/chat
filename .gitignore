@@ -27,7 +27,4 @@ yarn-error.log
 /.vscode
 /.zed
 tests/Browser/Screenshots
--e 
-# Agent logs
-.claude/agent/logs/*.log
-.claude/agent/logs/*.json
+.playwright-mcp/

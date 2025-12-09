@@ -13,7 +13,7 @@ const props = defineProps<{
     models: Model[];
 }>();
 
-const selectedModel = ref(props.models[0]?.id ?? '');
+const selectedModel = ref(props.models[0]?.id?.toString() ?? '');
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Chats', href: index.url() },
@@ -22,7 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const startNewChat = () => {
     router.post(store.url(), {
         message: 'New conversation',
-        model: selectedModel.value,
+        ai_model_id: Number(selectedModel.value),
     });
 };
 </script>
@@ -44,32 +44,43 @@ const startNewChat = () => {
                 </p>
 
                 <div class="flex flex-col gap-4 items-center">
-                    <Select v-model="selectedModel">
-                        <SelectTrigger class="w-[240px] glass-dark border-white/10 text-white">
-                            <SelectValue placeholder="Select a model" />
-                        </SelectTrigger>
-                        <SelectContent class="glass-dark border-white/10">
-                            <SelectItem
-                                v-for="model in models"
-                                :key="model.id"
-                                :value="model.id"
-                                class="text-white hover:bg-white/10"
-                            >
-                                <span class="flex items-center gap-2">
-                                    {{ model.name }}
-                                    <Zap v-if="model.supportsTools" class="h-3 w-3 text-indigo-400" />
-                                </span>
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <template v-if="models.length > 0">
+                        <Select v-model="selectedModel">
+                            <SelectTrigger class="w-[240px] glass-dark border-white/10 text-white">
+                                <SelectValue placeholder="Select a model" />
+                            </SelectTrigger>
+                            <SelectContent class="glass-dark border-white/10">
+                                <SelectItem
+                                    v-for="model in models"
+                                    :key="model.id"
+                                    :value="model.id.toString()"
+                                    class="text-white hover:bg-white/10"
+                                >
+                                    <span class="flex items-center gap-2">
+                                        {{ model.name }}
+                                        <Zap v-if="model.supports_tools" class="h-3 w-3 text-indigo-400" />
+                                    </span>
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
 
-                    <button
-                        @click="startNewChat"
-                        class="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 px-8 py-3 text-sm font-medium text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 glow-purple"
-                    >
-                        <Plus class="h-5 w-5" />
-                        Start New Chat
-                    </button>
+                        <button
+                            @click="startNewChat"
+                            class="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 px-8 py-3 text-sm font-medium text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 glow-purple"
+                        >
+                            <Plus class="h-5 w-5" />
+                            Start New Chat
+                        </button>
+                    </template>
+                    <template v-else>
+                        <p class="text-gray-400 text-sm">No AI models configured yet.</p>
+                        <a
+                            href="/settings/providers"
+                            class="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 px-8 py-3 text-sm font-medium text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 glow-purple"
+                        >
+                            Configure Providers
+                        </a>
+                    </template>
                 </div>
 
                 <div class="mt-8 pt-6 border-t border-white/10">

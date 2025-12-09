@@ -9,6 +9,7 @@ import { show } from '@/routes/two-factor';
 import { edit as editPassword } from '@/routes/user-password';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
+import { Key, ArrowLeft } from 'lucide-vue-next';
 
 const sidebarNavItems: NavItem[] = [
     {
@@ -24,6 +25,11 @@ const sidebarNavItems: NavItem[] = [
         href: show(),
     },
     {
+        title: 'Providers',
+        href: { url: '/settings/providers', method: 'get' },
+        icon: Key,
+    },
+    {
         title: 'Appearance',
         href: editAppearance(),
     },
@@ -34,6 +40,15 @@ const currentPath = typeof window !== undefined ? window.location.pathname : '';
 
 <template>
     <div class="px-4 py-6">
+        <div class="mb-6">
+            <Button variant="ghost" size="sm" as-child class="text-muted-foreground hover:text-foreground">
+                <Link href="/chats">
+                    <ArrowLeft class="mr-2 h-4 w-4" />
+                    Back to Chats
+                </Link>
+            </Button>
+        </div>
+
         <Heading
             title="Settings"
             description="Manage your profile and account settings"

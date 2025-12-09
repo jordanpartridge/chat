@@ -20,10 +20,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const startNewChat = () => {
-    const defaultModel = props.models[0]?.id ?? 'llama3.2';
+    const defaultModel = props.models[0]?.id;
+    if (!defaultModel) return;
     router.post(store.url(), {
         message: 'New conversation',
-        model: defaultModel,
+        ai_model_id: defaultModel,
     });
 };
 </script>
