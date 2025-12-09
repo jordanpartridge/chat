@@ -1,6 +1,33 @@
 {
   "version": "1.0.0",
-  "tasks": [],
-  "completed": [],
-  "last_sync": null
+  "tasks": [
+    {
+      "id": "gh-21",
+      "type": "feature",
+      "priority": 2,
+      "spec": "GitHub Issue #21: Add Agent Builder following IndyDevDan's standards\n\n## Description\nCreate an agent builder system using a model-based approach that follows IndyDevDan's agent architecture patterns.\n\n## Requirements\n- Create Agent model with proper Eloquent relationships\n- Define agent configuration schema (name, instructions, tools, model settings)\n- Build agent management UI (create, edit, list, delete agents)\n- Integrate with existing chat system to use custom agents\n- Follow Laravel conventions with factories, migrations, and tests\n\n## IndyDevDan Standards\n- Clean separation of agent definition from execution\n- Configuration-driven agent behavior\n- Support for tool/capability definitions\n- Proper state management\n\nClose with: fixes #21",
+      "status": "pending",
+      "github_issue": 21,
+      "created_at": "2025-12-08T00:00:00Z"
+    }
+  ],
+  "completed": [
+    {
+      "id": "gh-1",
+      "type": "feature",
+      "priority": 3,
+      "spec": "GitHub Issue #1: Add markdown rendering for chat messages",
+      "status": "complete",
+      "started_at": "2025-12-08T17:30:00Z",
+      "completed_at": "2025-12-08T18:05:00Z",
+      "github_issue": 1,
+      "created_at": "2025-12-08T00:00:00Z",
+      "output": "Implemented markdown rendering for AI assistant chat messages.\n\n## Changes:\n- ChatMessage.vue: Added markdown rendering for assistant messages using `marked` library\n- ChatMessage.vue: Added test data attributes (data-testid) for browser testing\n- User messages remain plain text as required\n- Dark mode supported via existing custom CSS styling\n\n## Tests:\n- Added tests/Browser/MarkdownRenderingTest.php with 6 tests:\n  - Renders markdown in assistant messages (h1, bold, italic, lists, code blocks)\n  - Keeps user messages as plain text\n  - Renders code blocks with proper formatting\n  - Renders inline code properly\n  - Renders ordered and unordered lists\n  - Renders links correctly\n- All 362 tests pass\n\n## Notes:\n- `marked` library was already installed\n- @tailwindcss/typography not installed (package.json in blocked_paths) - custom prose styles used instead\n- highlight.js not installed (package.json in blocked_paths) - syntax highlighting deferred",
+      "files_changed": [
+        "resources/js/components/chat/ChatMessage.vue",
+        "tests/Browser/MarkdownRenderingTest.php"
+      ]
+    }
+  ],
+  "last_sync": "2025-12-08T00:00:00Z"
 }
