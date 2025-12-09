@@ -552,3 +552,44 @@ Fortify is a headless authentication backend that provides authentication routes
 - `Features::updatePasswords()` to let users change their passwords.
 - `Features::resetPasswords()` for password reset via email.
 </laravel-boost-guidelines>
+
+---
+
+# Agent System
+
+This project has an autonomous agent that can work GitHub issues.
+
+## Quick Start
+```bash
+# 1. Label issues you want automated
+gh issue edit <number> --add-label agent
+
+# 2. Sync issues to queue
+/agent-sync-issues
+
+# 3. Run agent on next task
+/agent-run
+
+# 4. Check status
+/agent-status
+```
+
+## Available Commands
+- `/agent-sync-issues` - Pull GitHub issues with 'agent' label into queue
+- `/agent-run` - Execute next pending task
+- `/agent-status` - Dashboard showing queue state
+- `/agent-add-task <type> <priority> <spec>` - Manually add task
+- `/agent-pr` - Create PR for completed work
+
+## Scripts
+- `./scripts/agent-once.sh` - Run single task (cron-friendly)
+- `./scripts/agent-github-cycle.sh` - Full sync → run → PR cycle
+
+## Configuration
+See `.claude/agent/config.yaml` for permissions and safety rails.
+
+## Safety
+- Cannot push (human reviews first)
+- Cannot modify migrations, composer.json, package.json
+- Cannot delete files
+- Blocks on ambiguity rather than guessing

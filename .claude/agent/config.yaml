@@ -1,0 +1,45 @@
+# Agent Configuration for jordanpartridge/chat
+# Laravel + Inertia + Vue chat application
+
+agent:
+  name: "chat-agent"
+  version: "1.0.0"
+
+execution:
+  mode: "once"  # once | daemon | cron
+  max_tasks_per_run: 3
+  timeout_minutes: 30
+  retry_limit: 3
+
+permissions:
+  can_commit: true
+  can_push: false          # Human reviews before push
+  can_create_pr: true      # Via gh CLI
+  can_modify_specs: false
+  can_spawn_subtasks: true
+  can_delete_files: false
+  can_run_tests: true
+  can_run_migrations: false  # Too risky for auto
+
+# Laravel-specific settings
+laravel:
+  use_pint: true           # Run pint --dirty after PHP changes
+  use_pest: true           # Run pest tests after changes
+  use_npm_build: true      # Run npm build after frontend changes
+
+# GitHub integration
+github:
+  sync_labels: ["agent", "auto"]
+  ignore_labels: ["blocked", "wontfix", "needs-discussion"]
+  auto_pr: false           # Set true to auto-create PRs
+
+# Safety rails
+safety:
+  blocked_paths:
+    - ".env"
+    - "config/app.php"
+    - "database/migrations/*"  # Needs human review
+    - "composer.json"
+    - "package.json"
+  require_tests: true
+  max_files_per_task: 10
