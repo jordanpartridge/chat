@@ -31,7 +31,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import InputError from '@/components/InputError.vue';
 import { Form } from '@inertiajs/vue3';
 import { Trash2, Plus, Eye, EyeOff, Loader2, CheckCircle, XCircle } from 'lucide-vue-next';
 
