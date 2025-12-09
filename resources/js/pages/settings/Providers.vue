@@ -250,7 +250,7 @@ const submitForm = () => {
                         <div class="flex gap-2">
                             <Form
                                 :action="`/settings/providers/${credential.id}/toggle`"
-                                method="post"
+                                method="patch"
                                 class="inline"
                             >
                                 <Button
@@ -403,7 +403,7 @@ const submitForm = () => {
                                     <Checkbox
                                         :id="model.id"
                                         :checked="isModelSelected(model.id)"
-                                        @update:checked="toggleModel(model.id)"
+                                        @click.stop
                                     />
                                     <div class="flex-1 min-w-0">
                                         <label :for="model.id" class="text-sm font-medium cursor-pointer">

@@ -56,7 +56,7 @@ describe('add provider', function () {
         $page->click('Add Provider')
             ->waitForText('Add API Provider')
             ->select('provider', 'openai')
-            ->fill('api_key', 'sk-test-key-12345678901234567890')
+            ->fill('api_key', 'test-api-key-1234567890')
             ->click('Add Provider')
             ->waitForText('OpenAI');
 

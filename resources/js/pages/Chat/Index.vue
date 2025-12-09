@@ -22,7 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const startNewChat = () => {
     router.post(store.url(), {
         message: 'New conversation',
-        ai_model_id: selectedModel.value,
+        ai_model_id: Number(selectedModel.value),
     });
 };
 </script>

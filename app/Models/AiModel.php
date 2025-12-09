@@ -91,11 +91,12 @@ class AiModel extends Model
     }
 
     /**
-     * Get the provider from the credential.
+     * Get the provider from the credential, with fallback to legacy provider column.
      */
     public function getProviderAttribute(): ?string
     {
-        return $this->credential?->provider;
+        return $this->credential?->provider
+            ?? ($this->attributes['provider'] ?? null);
     }
 
     /**

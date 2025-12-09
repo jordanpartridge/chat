@@ -72,7 +72,7 @@ class UserApiCredential extends Model
     protected function maskedKey(): Attribute
     {
         return Attribute::make(
-            get: fn () => 'sk-••••••'.substr($this->api_key, -4),
+            get: fn () => $this->api_key ? 'sk-••••••'.substr($this->api_key, -4) : null,
         );
     }
 
