@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgentController;
 use App\Http\Controllers\ArtifactController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatStreamController;
@@ -35,6 +36,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('chats/{chat}/artifacts', [ArtifactController::class, 'index'])->name('artifacts.index');
     Route::get('artifacts/{artifact}', [ArtifactController::class, 'show'])->name('artifacts.show');
     Route::get('artifacts/{artifact}/render', [ArtifactController::class, 'render'])->name('artifacts.render');
+
+    Route::get('agents', [AgentController::class, 'index'])->name('agents.index');
+    Route::get('agents/create', [AgentController::class, 'create'])->name('agents.create');
+    Route::post('agents', [AgentController::class, 'store'])->name('agents.store');
+    Route::get('agents/{agent}', [AgentController::class, 'show'])->name('agents.show');
+    Route::get('agents/{agent}/edit', [AgentController::class, 'edit'])->name('agents.edit');
+    Route::patch('agents/{agent}', [AgentController::class, 'update'])->name('agents.update');
+    Route::delete('agents/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
 });
 
 require __DIR__.'/settings.php';

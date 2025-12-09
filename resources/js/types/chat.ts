@@ -65,4 +65,33 @@ export interface Model {
     name: string;
     description: string;
     provider: string;
+    supportsTools?: boolean;
+}
+
+export interface Agent {
+    id: number;
+    name: string;
+    description: string;
+    user_id: number | null;
+    default_model_id: number | null;
+    system_prompt: string | null;
+    avatar: string | null;
+    tools: string[] | null;
+    capabilities: string[] | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    default_model?: Model;
+}
+
+export interface ToolOption {
+    id: string;
+    name: string;
+    description: string;
+}
+
+export interface CapabilityOption {
+    id: string;
+    name: string;
+    description: string;
 }
