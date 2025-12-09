@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreChatRequest;
 use App\Http\Requests\UpdateChatRequest;
 use App\Models\Chat;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class ChatController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request): Response
     {
         $chats = $request->user()->chats()->with('aiModel')->orderByDesc('updated_at')->get();
@@ -36,7 +39,7 @@ class ChatController extends Controller
 
     public function show(Request $request, Chat $chat): Response
     {
-        abort_unless($chat->user_id === $request->user()->id, 403);
+        $this->authorize('view', $chat);
 
         $chats = $request->user()->chats()->with('aiModel')->orderByDesc('updated_at')->get();
 
@@ -56,7 +59,7 @@ class ChatController extends Controller
 
     public function destroy(Request $request, Chat $chat): RedirectResponse
     {
-        abort_unless($chat->user_id === $request->user()->id, 403);
+        $this->authorize('delete', $chat);
 
         $chat->delete();
 

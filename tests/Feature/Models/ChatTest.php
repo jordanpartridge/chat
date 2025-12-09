@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Agent;
 use App\Models\AiModel;
 use App\Models\Chat;
 use App\Models\Message;
@@ -34,6 +35,21 @@ describe('relationships', function () {
 
         expect($chat->aiModel)->toBeInstanceOf(AiModel::class);
         expect($chat->aiModel->id)->toBe($aiModel->id);
+    });
+
+    it('belongs to an agent', function () {
+        $user = User::factory()->create();
+        $agent = Agent::factory()->for($user)->create();
+        $chat = Chat::factory()->for($user)->create(['agent_id' => $agent->id]);
+
+        expect($chat->agent)->toBeInstanceOf(Agent::class);
+        expect($chat->agent->id)->toBe($agent->id);
+    });
+
+    it('allows null agent', function () {
+        $chat = Chat::factory()->create(['agent_id' => null]);
+
+        expect($chat->agent)->toBeNull();
     });
 
     it('has many messages', function () {

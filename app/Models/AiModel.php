@@ -64,6 +64,17 @@ class AiModel extends Model
     }
 
     /**
+     * Scope to get models that are both enabled and available.
+     *
+     * @param  Builder<AiModel>  $query
+     * @return Builder<AiModel>
+     */
+    public function scopeAvailable(Builder $query): Builder
+    {
+        return $query->where('enabled', true)->where('is_available', true);
+    }
+
+    /**
      * @param  Builder<AiModel>  $query
      * @return Builder<AiModel>
      */
