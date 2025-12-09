@@ -549,8 +549,8 @@ describe('toggleModel', function () {
     it('prevents toggling model when both credential and model belong to different users', function () {
         $user = User::factory()->create();
         $other = User::factory()->create();
-        $otherCredential = UserApiCredential::factory()->for($other)->create();
-        $anotherCredential = UserApiCredential::factory()->for($other)->create();
+        $otherCredential = UserApiCredential::factory()->for($other)->openai()->create();
+        $anotherCredential = UserApiCredential::factory()->for($other)->anthropic()->create();
         $model = \App\Models\AiModel::factory()->forCredential($anotherCredential)->create(['enabled' => true]);
 
         $response = $this->actingAs($user)->patch(
