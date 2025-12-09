@@ -27,6 +27,7 @@ class UpdateChatRequest extends FormRequest
         return [
             'ai_model_id' => ['sometimes', 'integer', 'exists:ai_models,id'],
             'title' => ['sometimes', 'string', 'max:255'],
+            'agent_id' => ['sometimes', 'nullable', 'integer', 'exists:agents,id'],
         ];
     }
 }

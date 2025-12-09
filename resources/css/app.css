@@ -514,20 +514,209 @@
         50% { opacity: 1; transform: scale(1.2); }
     }
 
-    /* Code block styling in dark theme */
+    /* Comprehensive prose styling for markdown content */
+    .prose {
+        line-height: 1.65;
+    }
+
+    /* Headings */
+    .prose h1, .prose h2, .prose h3, .prose h4 {
+        font-weight: 600;
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+    }
+
+    .prose h1 { font-size: 1.5em; }
+    .prose h2 { font-size: 1.3em; }
+    .prose h3 { font-size: 1.15em; }
+    .prose h4 { font-size: 1em; }
+
+    .prose h1:first-child,
+    .prose h2:first-child,
+    .prose h3:first-child,
+    .prose h4:first-child {
+        margin-top: 0;
+    }
+
+    /* Paragraphs */
+    .prose p {
+        margin-top: 0.75em;
+        margin-bottom: 0.75em;
+    }
+
+    /* Lists */
+    .prose ul, .prose ol {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+        padding-left: 1.5em;
+    }
+
+    .prose ul {
+        list-style-type: disc;
+    }
+
+    .prose ol {
+        list-style-type: decimal;
+    }
+
+    .prose li {
+        margin-top: 0.25em;
+        margin-bottom: 0.25em;
+    }
+
+    .prose li > ul, .prose li > ol {
+        margin-top: 0.25em;
+        margin-bottom: 0.25em;
+    }
+
+    /* Blockquotes */
+    .prose blockquote {
+        border-left: 3px solid rgba(99, 102, 241, 0.5);
+        padding-left: 1em;
+        margin: 1em 0;
+        font-style: italic;
+        opacity: 0.9;
+    }
+
+    /* Horizontal rules */
+    .prose hr {
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        margin: 1.5em 0;
+    }
+
+    /* Links */
+    .prose a {
+        color: #a5b4fc;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .prose a:hover {
+        color: #c7d2fe;
+    }
+
+    /* Bold and italic */
+    .prose strong {
+        font-weight: 600;
+    }
+
+    .prose em {
+        font-style: italic;
+    }
+
+    /* Tables */
+    .prose table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1em 0;
+        font-size: 0.9em;
+    }
+
+    .prose th, .prose td {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0.5em 0.75em;
+        text-align: left;
+    }
+
+    .prose th {
+        background: rgba(99, 102, 241, 0.15);
+        font-weight: 600;
+    }
+
+    .prose tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Code block styling - dark theme */
     .aurora-bg .prose pre,
     .dark .prose pre {
-        background: rgba(0, 0, 0, 0.4) !important;
-        border: 1px solid rgba(99, 102, 241, 0.2);
+        background: rgba(0, 0, 0, 0.5) !important;
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 0.5rem;
+        padding: 1em;
+        margin: 1em 0;
+        overflow-x: auto;
+        font-size: 0.875em;
+        line-height: 1.6;
         box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
     }
 
+    .aurora-bg .prose pre code,
+    .dark .prose pre code {
+        background: transparent !important;
+        padding: 0;
+        border-radius: 0;
+        color: #e2e8f0;
+        font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+    }
+
+    /* Inline code */
     .aurora-bg .prose code,
     .dark .prose code {
-        background: rgba(99, 102, 241, 0.15);
+        background: rgba(99, 102, 241, 0.2);
         color: #c7d2fe;
-        padding: 0.125rem 0.375rem;
+        padding: 0.15rem 0.4rem;
         border-radius: 0.25rem;
+        font-size: 0.9em;
+        font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+    }
+
+    /* Light mode prose styling */
+    .prose pre {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 1em;
+        margin: 1em 0;
+        overflow-x: auto;
+        font-size: 0.875em;
+        line-height: 1.6;
+    }
+
+    .prose pre code {
+        background: transparent !important;
+        padding: 0;
+        color: #334155;
+        font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+    }
+
+    .prose code {
+        background: #f1f5f9;
+        color: #6366f1;
+        padding: 0.15rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.9em;
+        font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+    }
+
+    .prose a {
+        color: #6366f1;
+    }
+
+    .prose a:hover {
+        color: #4f46e5;
+    }
+
+    .prose blockquote {
+        border-left-color: rgba(99, 102, 241, 0.4);
+        color: #64748b;
+    }
+
+    /* Dark mode overrides */
+    .dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4,
+    .aurora-bg .prose h1, .aurora-bg .prose h2, .aurora-bg .prose h3, .aurora-bg .prose h4 {
+        color: #f1f5f9;
+    }
+
+    .dark .prose blockquote,
+    .aurora-bg .prose blockquote {
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .dark .prose th,
+    .aurora-bg .prose th {
+        background: rgba(99, 102, 241, 0.2);
     }
 
     /* Scrollbar styling for dark theme */

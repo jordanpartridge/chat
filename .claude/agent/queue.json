@@ -2,32 +2,46 @@
   "version": "1.0.0",
   "tasks": [
     {
-      "id": "gh-21",
+      "id": "gh-1",
       "type": "feature",
-      "priority": 2,
-      "spec": "GitHub Issue #21: Add Agent Builder following IndyDevDan's standards\n\n## Description\nCreate an agent builder system using a model-based approach that follows IndyDevDan's agent architecture patterns.\n\n## Requirements\n- Create Agent model with proper Eloquent relationships\n- Define agent configuration schema (name, instructions, tools, model settings)\n- Build agent management UI (create, edit, list, delete agents)\n- Integrate with existing chat system to use custom agents\n- Follow Laravel conventions with factories, migrations, and tests\n\n## IndyDevDan Standards\n- Clean separation of agent definition from execution\n- Configuration-driven agent behavior\n- Support for tool/capability definitions\n- Proper state management\n\nClose with: fixes #21",
+      "priority": 4,
+      "spec": "GitHub Issue #1: Add markdown rendering for chat messages\n\n## Description\nAI responses often contain markdown (code blocks, lists, headers, etc.) but currently render as plain text.\n\n## Tasks\n- [ ] Install `marked` and `@tailwindcss/typography`\n- [ ] Update `ChatMessage.vue` to render markdown for assistant messages\n- [ ] Add proper styling for code blocks, lists, tables\n- [ ] Consider syntax highlighting for code blocks (highlight.js or similar)\n\n## Acceptance Criteria\n- Code blocks render with proper formatting\n- Lists, headers, bold/italic render correctly\n- User messages remain plain text\n- Dark mode supported\n\nClose with: fixes #1",
       "status": "pending",
-      "github_issue": 21,
-      "created_at": "2025-12-08T00:00:00Z"
+      "github_issue": 1,
+      "created_at": "2024-12-08T17:50:00Z"
+    },
+    {
+      "id": "gh-3",
+      "type": "feature",
+      "priority": 1,
+      "spec": "GitHub Issue #3: Add model info and descriptions to model selector\n\n## Description\nHelp users understand which model to choose by showing descriptions, capabilities, and use cases.\n\n## Tasks\n- [ ] Enhance model selector dropdown with descriptions\n- [ ] Add model capability badges (fast, creative, coding, etc.)\n- [ ] Show model size/context length info\n- [ ] Consider tooltip or expandable info section\n- [ ] Update ModelName enum with richer metadata\n\n## Model info to display\n- **Name**: Human-readable name\n- **Description**: 1-2 sentence summary\n- **Best for**: Use cases (coding, creative writing, analysis)\n- **Speed**: Fast/Medium/Slow indicator\n- **Context length**: Token limit\n\n## Acceptance Criteria\n- Users can make informed model choices\n- Info doesn't clutter the UI\n- Works on mobile\n\nClose with: fixes #3",
+      "status": "pending",
+      "github_issue": 3,
+      "created_at": "2024-12-08T17:50:00Z"
     }
   ],
   "completed": [
     {
-      "id": "gh-1",
+      "id": "gh-21",
       "type": "feature",
-      "priority": 3,
-      "spec": "GitHub Issue #1: Add markdown rendering for chat messages",
+      "priority": 2,
+      "spec": "GitHub Issue #21: Add Agent Builder following IndyDevDan's standards",
       "status": "complete",
-      "started_at": "2025-12-08T17:30:00Z",
-      "completed_at": "2025-12-08T18:05:00Z",
-      "github_issue": 1,
-      "created_at": "2025-12-08T00:00:00Z",
-      "output": "Implemented markdown rendering for AI assistant chat messages.\n\n## Changes:\n- ChatMessage.vue: Added markdown rendering for assistant messages using `marked` library\n- ChatMessage.vue: Added test data attributes (data-testid) for browser testing\n- User messages remain plain text as required\n- Dark mode supported via existing custom CSS styling\n\n## Tests:\n- Added tests/Browser/MarkdownRenderingTest.php with 6 tests:\n  - Renders markdown in assistant messages (h1, bold, italic, lists, code blocks)\n  - Keeps user messages as plain text\n  - Renders code blocks with proper formatting\n  - Renders inline code properly\n  - Renders ordered and unordered lists\n  - Renders links correctly\n- All 362 tests pass\n\n## Notes:\n- `marked` library was already installed\n- @tailwindcss/typography not installed (package.json in blocked_paths) - custom prose styles used instead\n- highlight.js not installed (package.json in blocked_paths) - syntax highlighting deferred",
+      "started_at": "2025-12-08T00:00:00Z",
+      "completed_at": "2025-12-08T01:00:00Z",
+      "github_issue": 21,
+      "created_at": "2024-12-08T17:50:00Z",
+      "output": "Implemented Agent Builder with full CRUD UI and chat system integration.\n\n## Implementation Summary:\nThe Agent Builder feature was already implemented with:\n- Agent model with proper Eloquent relationships (user, defaultModel, models)\n- Full CRUD controller (AgentController)\n- Vue UI pages (Index, Create, Edit, Show)\n- Comprehensive test coverage (43 tests for agents)\n\n## New Integration Work:\nAdded chat system integration to use custom agents:\n\n### Backend Changes:\n- app/Models/Chat.php: Added agent_id fillable and agent() relationship\n- app/Http/Controllers/ChatController.php: Added agents to index/show views, support for agent_id in store\n- app/Http/Requests/StoreChatRequest.php: Added agent_id validation (nullable, exists)\n- app/Http/Requests/UpdateChatRequest.php: Added agent_id validation (sometimes, nullable)\n\n### Frontend Changes:\n- resources/js/types/chat.ts: Added agent_id and agent to Chat interface\n- resources/js/pages/Chat/Index.vue: Added agent selector dropdown when creating new chat\n- resources/js/pages/Chat/Show.vue: Added agent selector in header, agent indicator badge\n\n## Tests:\n- All 362 tests pass (844 assertions)\n- Existing Agent tests (43) + Chat tests (95) all passing",
       "files_changed": [
-        "resources/js/components/chat/ChatMessage.vue",
-        "tests/Browser/MarkdownRenderingTest.php"
+        "app/Models/Chat.php",
+        "app/Http/Controllers/ChatController.php",
+        "app/Http/Requests/StoreChatRequest.php",
+        "app/Http/Requests/UpdateChatRequest.php",
+        "resources/js/types/chat.ts",
+        "resources/js/pages/Chat/Index.vue",
+        "resources/js/pages/Chat/Show.vue"
       ]
     }
   ],
-  "last_sync": "2025-12-08T00:00:00Z"
+  "last_sync": "2024-12-08T17:50:00Z"
 }

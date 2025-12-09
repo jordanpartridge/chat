@@ -55,6 +55,8 @@ export interface Chat {
     user_id: number;
     title: string;
     model: string;
+    agent_id?: number | null;
+    agent?: Agent | null;
     created_at: string;
     updated_at: string;
     messages?: Message[];

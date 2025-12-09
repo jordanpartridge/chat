@@ -2,8 +2,8 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Sparkles, Zap } from 'lucide-vue-next';
-import type { Chat, Model } from '@/types/chat';
+import { Plus, Sparkles, Zap, Bot } from 'lucide-vue-next';
+import type { Chat, Model, Agent } from '@/types/chat';
 import type { BreadcrumbItem } from '@/types';
 import { ref } from 'vue';
 import { index, store } from '@/actions/App/Http/Controllers/ChatController';
@@ -11,9 +11,11 @@ import { index, store } from '@/actions/App/Http/Controllers/ChatController';
 const props = defineProps<{
     chats: Chat[];
     models: Model[];
+    agents: Agent[];
 }>();
 
 const selectedModel = ref(props.models[0]?.id ?? '');
+const selectedAgent = ref<string>('');
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Chats', href: index.url() },
@@ -22,7 +24,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 const startNewChat = () => {
     router.post(store.url(), {
         message: 'New conversation',
-        model: selectedModel.value,
+        ai_model_id: selectedModel.value,
+        agent_id: selectedAgent.value || null,
     });
 };
 </script>
@@ -58,6 +61,28 @@ const startNewChat = () => {
                                 <span class="flex items-center gap-2">
                                     {{ model.name }}
                                     <Zap v-if="model.supportsTools" class="h-3 w-3 text-indigo-400" />
+                                </span>
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Select v-if="agents.length > 0" v-model="selectedAgent">
+                        <SelectTrigger class="w-[240px] glass-dark border-white/10 text-white">
+                            <SelectValue placeholder="Select an agent (optional)" />
+                        </SelectTrigger>
+                        <SelectContent class="glass-dark border-white/10">
+                            <SelectItem value="" class="text-gray-400 hover:bg-white/10">
+                                No agent
+                            </SelectItem>
+                            <SelectItem
+                                v-for="agent in agents"
+                                :key="agent.id"
+                                :value="String(agent.id)"
+                                class="text-white hover:bg-white/10"
+                            >
+                                <span class="flex items-center gap-2">
+                                    <Bot class="h-3 w-3 text-purple-400" />
+                                    {{ agent.name }}
                                 </span>
                             </SelectItem>
                         </SelectContent>

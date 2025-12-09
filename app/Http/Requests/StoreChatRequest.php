@@ -21,6 +21,7 @@ class StoreChatRequest extends FormRequest
         return [
             'message' => ['required', 'string', 'max:10000'],
             'ai_model_id' => ['required', 'integer', 'exists:ai_models,id'],
+            'agent_id' => ['nullable', 'integer', 'exists:agents,id'],
         ];
     }
 }

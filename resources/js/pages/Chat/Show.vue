@@ -7,16 +7,17 @@ import ChatInput from '@/components/chat/ChatInput.vue';
 import ArtifactPanel from '@/components/artifacts/ArtifactPanel.vue';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMessageStream } from '@/composables/useMessageStream';
-import type { Chat, Message, Model, Artifact } from '@/types/chat';
+import type { Chat, Message, Model, Artifact, Agent } from '@/types/chat';
 import { Role } from '@/types/chat';
 import type { BreadcrumbItem } from '@/types';
 import { index, show, update } from '@/actions/App/Http/Controllers/ChatController';
-import { Sparkles, Zap } from 'lucide-vue-next';
+import { Sparkles, Zap, Bot } from 'lucide-vue-next';
 
 const props = defineProps<{
     chat: Chat;
     chats: Chat[];
     models: Model[];
+    agents: Agent[];
 }>();
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
@@ -27,6 +28,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 const messages = ref<Message[]>(props.chat.messages ?? []);
 const selectedArtifact = ref<Artifact | null>(null);
 const selectedModel = ref(props.chat.model);
+const selectedAgent = ref<string>(props.chat.agent_id ? String(props.chat.agent_id) : '');
 
 const handleArtifactCreated = (artifact: Artifact) => {
     selectedArtifact.value = artifact;
@@ -36,7 +38,19 @@ const handleArtifactCreated = (artifact: Artifact) => {
 watch(selectedModel, (newModel) => {
     if (newModel !== props.chat.model) {
         router.patch(update.url(props.chat.id), {
-            model: newModel,
+            ai_model_id: newModel,
+        }, {
+            preserveScroll: true,
+        });
+    }
+});
+
+// Update agent when changed
+watch(selectedAgent, (newAgent) => {
+    const newAgentId = newAgent ? Number(newAgent) : null;
+    if (newAgentId !== props.chat.agent_id) {
+        router.patch(update.url(props.chat.id), {
+            agent_id: newAgentId,
         }, {
             preserveScroll: true,
         });
@@ -100,6 +114,10 @@ const supportsTools = computed(() => {
                                     <span v-if="supportsTools" class="tool-indicator">
                                         Tools Enabled
                                     </span>
+                                    <span v-if="chat.agent" class="flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/20 text-xs text-purple-300">
+                                        <Bot class="h-3 w-3" />
+                                        {{ chat.agent.name }}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -110,6 +128,29 @@ const supportsTools = computed(() => {
                                 <Zap class="h-3 w-3 animate-pulse" />
                                 <span>Generating...</span>
                             </div>
+
+                            <!-- Agent selector -->
+                            <Select v-if="agents.length > 0" v-model="selectedAgent" data-test="agent-selector">
+                                <SelectTrigger class="w-[160px] glass-dark border-white/10 text-white text-sm" data-test="agent-selector-trigger">
+                                    <SelectValue placeholder="No agent" />
+                                </SelectTrigger>
+                                <SelectContent class="glass-dark border-white/10">
+                                    <SelectItem value="" class="text-gray-400 hover:bg-white/10">
+                                        No agent
+                                    </SelectItem>
+                                    <SelectItem
+                                        v-for="agent in agents"
+                                        :key="agent.id"
+                                        :value="String(agent.id)"
+                                        class="text-white hover:bg-white/10"
+                                    >
+                                        <span class="flex items-center gap-2">
+                                            <Bot class="h-3 w-3 text-purple-400" />
+                                            {{ agent.name }}
+                                        </span>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
 
                             <!-- Model selector -->
                             <Select v-model="selectedModel" data-test="model-selector">
