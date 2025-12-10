@@ -39,4 +39,12 @@ return [
         'api_key' => env('TAVILY_API_KEY'),
     ],
 
+    'github' => [
+        'app_id' => env('SHIT_AGENTS_APP_ID'),
+        'client_id' => env('SHIT_AGENTS_CLIENT_ID'),
+        'client_secret' => env('SHIT_AGENTS_CLIENT_SECRET'),
+        'private_key' => env('SHIT_AGENTS_PRIVATE_KEY'),
+        'private_key_path' => env('SHIT_AGENTS_PRIVATE_KEY_PATH'),
+    ],
+
 ];
