@@ -28,7 +28,7 @@ export enum ArtifactType {
 }
 
 export interface Artifact {
-    id: string;
+    id: number;
     message_id: string;
     identifier: string;
     type: ArtifactType;
@@ -51,23 +51,53 @@ export interface Message {
 }
 
 export interface Chat {
-    id: string;
+    id: number;
     user_id: number;
     title: string;
     ai_model_id: number;
-    ai_model?: Model;
+    ai_model?: AiModel;
+    agent_id?: number | null;
+    agent?: Agent | null;
     created_at: string;
     updated_at: string;
     messages?: Message[];
 }
 
-export interface Model {
+export interface AiModel {
     id: number;
     name: string;
-    model_id: string;
-    description: string | null;
-    provider?: string;
-    supports_tools?: boolean;
-    supports_vision?: boolean;
-    enabled?: boolean;
+    description: string;
+    provider: string;
+    model_id: string;    supports_tools: boolean;
+    supports_vision: boolean;
+    context_window: number;
+    speed_tier: string;
+    cost_tier: string;}
+
+export interface Agent {
+    id: number;
+    name: string;
+    description: string;
+    user_id: number | null;
+    default_model_id: number | null;
+    system_prompt: string | null;
+    avatar: string | null;
+    tools: string[] | null;
+    capabilities: string[] | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    default_model?: AiModel;
+}
+
+export interface ToolOption {
+    id: number;
+    name: string;
+    description: string;
+}
+
+export interface CapabilityOption {
+    id: number;
+    name: string;
+    description: string;
 }
