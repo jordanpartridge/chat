@@ -1,0 +1,188 @@
+services:
+    # Laravel Application
+    app:
+        build:
+            context: .
+            dockerfile: docker/app/Dockerfile
+        container_name: chat-app
+        restart: unless-stopped
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '${APP_PORT:-8000}:8000'
+        environment:
+            APP_ENV: '${APP_ENV:-local}'
+            APP_DEBUG: '${APP_DEBUG:-true}'
+            DB_CONNECTION: pgsql
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_DATABASE: '${DB_DATABASE:-chat}'
+            DB_USERNAME: '${DB_USERNAME:-chat}'
+            DB_PASSWORD: '${DB_PASSWORD:-secret}'
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            CACHE_STORE: redis
+            SESSION_DRIVER: redis
+            QUEUE_CONNECTION: redis
+            MAIL_MAILER: smtp
+            MAIL_HOST: mailpit
+            MAIL_PORT: 1025
+        volumes:
+            - '.:/var/www/html'
+            - './docker/app/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro'
+        networks:
+            - chat
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "php", "artisan", "about"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+
+    # Vite Dev Server
+    vite:
+        build:
+            context: .
+            dockerfile: docker/node/Dockerfile
+        container_name: chat-vite
+        restart: unless-stopped
+        ports:
+            - '${VITE_PORT:-5173}:5173'
+        volumes:
+            - '.:/var/www/html'
+            - '/var/www/html/node_modules'
+        networks:
+            - chat
+        command: npm run dev -- --host 0.0.0.0
+
+    # Queue Worker (Horizon)
+    horizon:
+        build:
+            context: .
+            dockerfile: docker/app/Dockerfile
+        container_name: chat-horizon
+        restart: unless-stopped
+        environment:
+            APP_ENV: '${APP_ENV:-local}'
+            DB_CONNECTION: pgsql
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_DATABASE: '${DB_DATABASE:-chat}'
+            DB_USERNAME: '${DB_USERNAME:-chat}'
+            DB_PASSWORD: '${DB_PASSWORD:-secret}'
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            QUEUE_CONNECTION: redis
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - chat
+        depends_on:
+            - app
+            - redis
+        command: php artisan horizon
+
+    # Scheduler (Cron)
+    scheduler:
+        build:
+            context: .
+            dockerfile: docker/app/Dockerfile
+        container_name: chat-scheduler
+        restart: unless-stopped
+        environment:
+            APP_ENV: '${APP_ENV:-local}'
+            DB_CONNECTION: pgsql
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_DATABASE: '${DB_DATABASE:-chat}'
+            DB_USERNAME: '${DB_USERNAME:-chat}'
+            DB_PASSWORD: '${DB_PASSWORD:-secret}'
+            REDIS_HOST: redis
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - chat
+        depends_on:
+            - app
+        command: sh -c "while true; do php artisan schedule:run --verbose; sleep 60; done"
+
+    # PostgreSQL with pgvector for AI embeddings
+    postgres:
+        image: pgvector/pgvector:pg16
+        container_name: chat-postgres
+        restart: unless-stopped
+        ports:
+            - '${DB_PORT:-5432}:5432'
+        environment:
+            POSTGRES_DB: '${DB_DATABASE:-chat}'
+            POSTGRES_USER: '${DB_USERNAME:-chat}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+        volumes:
+            - chat-postgres:/var/lib/postgresql/data
+            - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+        networks:
+            - chat
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-chat}"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    # Redis
+    redis:
+        image: redis:7-alpine
+        container_name: chat-redis
+        restart: unless-stopped
+        ports:
+            - '${REDIS_PORT:-6379}:6379'
+        volumes:
+            - chat-redis:/data
+        networks:
+            - chat
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+        command: redis-server --appendonly yes
+
+    # Mailpit (Email Testing)
+    mailpit:
+        image: axllent/mailpit:latest
+        container_name: chat-mailpit
+        restart: unless-stopped
+        ports:
+            - '${MAILPIT_PORT:-8025}:8025'
+            - '1025:1025'
+        networks:
+            - chat
+
+    # Browser Testing (Playwright)
+    playwright:
+        build:
+            context: .
+            dockerfile: docker/playwright/Dockerfile
+        container_name: chat-playwright
+        volumes:
+            - '.:/var/www/html'
+            - './storage/app/screenshots:/var/www/html/storage/app/screenshots'
+        networks:
+            - chat
+        depends_on:
+            - app
+        profiles:
+            - testing
+
+networks:
+    chat:
+        driver: bridge
+
+volumes:
+    chat-postgres:
+        driver: local
+    chat-redis:
+        driver: local
