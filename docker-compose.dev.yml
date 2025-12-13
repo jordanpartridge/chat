@@ -1,0 +1,27 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+        image: chat-app-dev
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '${APP_PORT:-8000}:8000'
+            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        environment:
+            APP_ENV: testing
+            WWWUSER: '${WWWUSER:-1000}'
+            WWWGROUP: '${WWWGROUP:-1000}'
+        volumes:
+            - '.:/var/www/html'
+            - '/var/www/html/vendor'
+            - '/var/www/html/node_modules'
+        networks:
+            - sail
+        tty: true
+        stdin_open: true
+
+networks:
+    sail:
+        driver: bridge

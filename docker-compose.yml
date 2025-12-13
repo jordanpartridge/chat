@@ -1,0 +1,37 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: chat-app
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '${APP_PORT:-80}:80'
+            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        environment:
+            WWWUSER: '${WWWUSER:-1000}'
+            WWWGROUP: '${WWWGROUP:-1000}'
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+            IGNITION_LOCAL_SITES_PATH: '${PWD}'
+        volumes:
+            - '.:/var/www/html'
+            - 'sail-playwright:/var/www/html/.playwright'
+        networks:
+            - sail
+        depends_on: []
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost/up"]
+            interval: 10s
+            timeout: 5s
+            retries: 3
+
+networks:
+    sail:
+        driver: bridge
+
+volumes:
+    sail-playwright:
+        driver: local
