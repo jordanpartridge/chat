@@ -53,6 +53,7 @@ const copyMessage = async () => {
     <div
         class="message-enter message-card px-4 py-4 md:px-6 group"
         :class="isUser ? 'flex justify-end' : 'flex justify-start'"
+        :data-testid="isUser ? 'user-message' : 'assistant-message'"
     >
         <div
             class="flex max-w-[85%] gap-3 md:max-w-[75%]"
@@ -90,9 +91,10 @@ const copyMessage = async () => {
                 >
                     <div
                         class="prose prose-sm max-w-none prose-invert"
+                        data-testid="message-content"
                     >
-                        <p v-if="isUser" class="whitespace-pre-wrap m-0 text-white">{{ message.parts?.text }}</p>
-                        <div v-else v-html="renderedContent" class="[&>p:first-child]:mt-0 [&>p:last-child]:mb-0 text-gray-100 [&_p]:text-gray-100 [&_li]:text-gray-100 [&_strong]:text-white [&_code]:text-indigo-300" />
+                        <p v-if="isUser" class="whitespace-pre-wrap m-0 text-white" data-testid="plain-text-content">{{ message.parts?.text }}</p>
+                        <div v-else v-html="renderedContent" class="[&>p:first-child]:mt-0 [&>p:last-child]:mb-0 text-gray-100 [&_p]:text-gray-100 [&_li]:text-gray-100 [&_strong]:text-white [&_code]:text-indigo-300" data-testid="markdown-content" />
                     </div>
                 </div>
 
