@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArtifactController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatStreamController;
+use App\Http\Controllers\GitHubAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -37,6 +38,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('chats/{chat}/artifacts', [ArtifactController::class, 'index'])->name('artifacts.index');
     Route::get('artifacts/{artifact}', [ArtifactController::class, 'show'])->name('artifacts.show');
     Route::get('artifacts/{artifact}/render', [ArtifactController::class, 'render'])->name('artifacts.render');
+});
+
+// GitHub App routes
+Route::prefix('github')->name('github.')->group(function () {
+    Route::get('/', [GitHubAppController::class, 'index'])->name('index')->middleware(['auth']);
+    Route::post('/device', [GitHubAppController::class, 'device'])->name('device')->middleware(['auth']);
+    Route::post('/poll', [GitHubAppController::class, 'poll'])->name('poll')->middleware(['auth']);
+    Route::get('/callback', [GitHubAppController::class, 'callback'])->name('callback');
+    Route::post('/webhook', [GitHubAppController::class, 'webhook'])->name('webhook');
+    Route::post('/test-commit', [GitHubAppController::class, 'testCommit'])->name('test-commit')->middleware(['auth']);
+    Route::post('/installation-token', [GitHubAppController::class, 'installationToken'])->name('installation-token')->middleware(['auth']);
 });
 
 require __DIR__.'/settings.php';
