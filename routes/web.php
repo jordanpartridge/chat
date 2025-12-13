@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgentSwarmController;
 use App\Http\Controllers\ArtifactController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ChatStreamController;
@@ -37,6 +38,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('chats/{chat}/artifacts', [ArtifactController::class, 'index'])->name('artifacts.index');
     Route::get('artifacts/{artifact}', [ArtifactController::class, 'show'])->name('artifacts.show');
     Route::get('artifacts/{artifact}/render', [ArtifactController::class, 'render'])->name('artifacts.render');
+
+    // Agent Swarm routes
+    Route::get('agents/swarms', [AgentSwarmController::class, 'index'])->name('agents.swarms.index');
+    Route::post('agents/swarms', [AgentSwarmController::class, 'store'])->name('agents.swarms.store');
+    Route::get('agents/swarms/{swarm}', [AgentSwarmController::class, 'show'])->name('agents.swarms.show');
+    Route::post('agents/swarms/status', [AgentSwarmController::class, 'updateAgentStatus'])->name('agents.swarms.update-status');
 });
 
 require __DIR__.'/settings.php';
