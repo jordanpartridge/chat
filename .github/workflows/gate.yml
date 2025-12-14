@@ -1,0 +1,20 @@
+name: Sentinel Gate
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  gate:
+    name: 🛡️ Sentinel Gate
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Sentinel Gate
+        uses: synapse-sentinel/gate@main
+        with:
+          github-token: \${{ secrets.GITHUB_TOKEN }}
